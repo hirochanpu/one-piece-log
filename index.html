@@ -110,11 +110,7 @@ table.mt th{color:var(--muted);font-weight:700;font-size:11px}
     <label class="chk"><input type="checkbox" id="flashback">回想</label>
     <span id="mapOnly" style="display:contents">
     <div class="ctl"><span class="lab">フォーカス</span><select class="mini" id="focus"><option value="">全体</option></select></div>
-    <label class="chk"><input type="checkbox" id="trail">軌跡</label>
-    <div class="ctl"><span class="lab">地図</span><div class="seg" id="styleSeg"><button data-style="image">地図画像</button><button data-style="zone" class="on">簡易</button><button data-style="grid">グリッド</button></div></div>
-    <button class="seg" id="bgBtn" style="border-radius:8px;padding:7px 11px;color:var(--muted)">背景画像</button>
-    <button class="seg" id="calBtn" style="border-radius:8px;padding:7px 11px;color:var(--muted)">📍位置調整</button>
-    <input type="file" id="bgFile" accept="image/*" style="display:none">
+    <div class="ctl"><span class="lab">地図</span><div class="seg" id="styleSeg"><button data-style="zone" class="on">簡易</button><button data-style="grid">グリッド</button></div></div>
     <label class="chk"><input type="checkbox" id="autozoom" checked>自動ズーム</label>
     <label class="chk"><input type="checkbox" id="labels" checked>名前</label>
     </span>
@@ -451,12 +447,10 @@ function banner(t){const b=$("calban");if(t){b.textContent=t;b.classList.add("sh
 function startCal(){if(!S.bg){alert("先に「背景画像」から地図画像を読み込んでください。");return;}if(S.calStep){S.calStep=0;banner("");render();return;}S.style="image";[...$("styleSeg").children].forEach(x=>x.classList.toggle("on",x.dataset.style==="image"));S.calStep=1;S.calClicks=[];banner(`調整 1/2：地図上の「${REF[0].name}」をクリック`);render();}
 function calClick(ev){if(!S.calStep)return;ev.preventDefault();ev.stopPropagation();S.calClicks.push(svgPoint(ev));if(S.calStep<REF.length){S.calStep++;banner(`調整 2/2：地図上の「${REF[1].name}」をクリック`);}else finishCal();}
 function finishCal(){const P0=DATA.placeById[REF[0].id],P1=DATA.placeById[REF[1].id];const c0=S.calClicks[0],c1=S.calClicks[1];if(P1.x===P0.x||P1.y===P0.y){alert("基準点が不適切です。");S.calStep=0;banner("");return;}const a=(c1.x-c0.x)/(P1.x-P0.x),b=c0.x-a*P0.x,c=(c1.y-c0.y)/(P1.y-P0.y),d=c0.y-c*P0.y;S.cal={a,b,c,d};try{localStorage.setItem("opcal",JSON.stringify(S.cal));}catch(_){}S.calStep=0;banner("");render();}
-$("calBtn").onclick=startCal;$("stage").addEventListener("click",calClick,true);
 $("basisSeg").addEventListener("click",e=>{const b=e.target.dataset.basis;if(!b||e.target.disabled)return;S.basis=b;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x.dataset.basis===b));S.idx=0;rebuildStops();renderActive();});
 $("styleSeg").addEventListener("click",e=>{const st=e.target.dataset.style;if(!st)return;if(st==="image"&&!S.bg){alert("「背景画像」から地図画像を読み込むと地図モードになります。");}S.style=st;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x.dataset.style===st));render();});
 $("slider").oninput=e=>{S.idx=Number(e.target.value);renderActive();};
 $("focus").onchange=e=>{S.focus=e.target.value;render();};
-$("trail").onchange=e=>{S.trail=e.target.checked;render();};
 $("autozoom").onchange=e=>{S.autozoom=e.target.checked;render();};
 $("flashback").onchange=e=>{S.flashback=e.target.checked;const volBtn=$("basisSeg").querySelector('[data-basis="volume"]');if(S.flashback){S.basis="day";[...$("basisSeg").children].forEach(x=>x.classList.toggle("on",x.dataset.basis==="day"));volBtn.disabled=true;volBtn.style.opacity=.4;volBtn.style.cursor="not-allowed";}else{volBtn.disabled=false;volBtn.style.opacity="";volBtn.style.cursor="";}S.idx=0;rebuildStops();renderActive();};
 $("labels").onchange=e=>{S.labels=e.target.checked;render();};
@@ -482,14 +476,13 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{document.querySelect
   $("ph").style.display="none";renderActive();});
 function loadBgDims(url,cb){const img=new Image();img.onload=()=>{S.imgW=img.naturalWidth;S.imgH=img.naturalHeight;cb&&cb();};img.src=url;}
 function applyBg(url){S.bg=url;S.style="image";[...$("styleSeg").children].forEach(x=>x.classList.toggle("on",x.dataset.style==="image"));render();}
-$("bgBtn").onclick=()=>$("bgFile").click();
-$("bgFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const url=ev.target.result;try{localStorage.setItem("opbg",url);}catch(_){}S.cal=null;try{localStorage.removeItem("opcal");}catch(_){}loadBgDims(url,()=>applyBg(url));};r.readAsDataURL(f);};
 window.addEventListener("resize",()=>{if(S.tab==="map")render();});
 initDerived();
 buildSpoiler();populateFocus();buildFacSel();buildRankChar();rebuildStops();
 try{localStorage.removeItem("opbg");localStorage.removeItem("opcal");localStorage.removeItem("opdata");}catch(_){}
 render();
-(function(){let vc=1;try{vc=Number(localStorage.getItem("opviews")||"0")+1;localStorage.setItem("opviews",String(vc));}catch(_){}$("viewCount").textContent=vc.toLocaleString();})();
+(function(){function local(){let vc=1;try{vc=Number(localStorage.getItem("opviews")||"0")+1;localStorage.setItem("opviews",String(vc));}catch(_){}$("viewCount").textContent=vc.toLocaleString();}
+  fetch("https://abacus.jasoncameron.dev/hit/hirochanpu-one-piece-log/views").then(r=>r.json()).then(d=>{const v=d&&(d.value!=null?d.value:d.count);if(v==null)throw 0;$("viewCount").textContent=Number(v).toLocaleString();}).catch(local);})();
 $("aboutBtn").onclick=()=>$("aboutModal").classList.add("show");
 $("aboutClose").onclick=()=>$("aboutModal").classList.remove("show");
 $("aboutModal").addEventListener("click",e=>{if(e.target.id==="aboutModal")$("aboutModal").classList.remove("show");});
