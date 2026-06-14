@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ONE PIECE デジタル航海日誌</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="manifest" href="./manifest.webmanifest">
 <meta name="theme-color" content="#0b1726">
 <link rel="apple-touch-icon" href="./icon-192.png">
@@ -94,8 +93,6 @@ table.mt th{color:var(--muted);font-weight:700;font-size:11px}
   <header>
     <div class="brand">🏴‍☠️ ONE PIECE <small>デジタル航海日誌</small></div>
     <div class="spacer"></div>
-    <button class="seg" id="updBtn" style="border-radius:8px;padding:6px 10px;color:var(--muted)">📂Excel更新</button>
-    <input type="file" id="updFile" accept=".xlsx,.xls" style="display:none">
     <div class="spoiler"><label for="spoiler">ネタバレ：</label><select id="spoiler"></select><span style="font-size:11px;color:var(--muted)">巻まで</span></div>
   </header>
   <div class="tabs">
@@ -232,7 +229,7 @@ function view(vis){
   const {W,H}=getStageSize();const padX=(maxX-minX)*0.08+20,padY=(maxY-minY)*0.08+20;
   const p={minX:minX-padX,maxX:maxX+padX,minY:minY-padY,maxY:maxY+padY};p.w=p.maxX-p.minX;p.h=p.maxY-p.minY;
   const sc=Math.min(W/p.w,H/p.h),offX=(W-p.w*sc)/2,offY=(H-p.h*sc)/2;S.proj=p;
-  return {vbX:0,vbY:0,vbW:W,vbH:H,project:(x,y)=>[(x-p.minX)*sc+offX,(y-p.minY)*sc+offY],image:false,sz:{R:6,dotR:4,FS:11,off:9}};
+  return {vbX:0,vbY:0,vbW:W,vbH:H,project:(x,y)=>[(x-p.minX)*sc+offX,(y-p.minY)*sc+offY],image:false,sz:{R:5,dotR:8,FS:11,off:9}};
 }
 function buildSpoiler(){const sel=$("spoiler");sel.innerHTML='<option value="999">全巻</option>';for(let v=1;v<=MAXV;v++){const o=document.createElement("option");o.value=v;o.textContent=v;sel.appendChild(o);}sel.value="999";S.maxVol=999;sel.onchange=()=>{S.maxVol=Number(sel.value);S.idx=0;S.quiz=null;rebuildStops();renderActive();};}
 function populateFocus(){const sel=$("focus");const ids=[...new Set(DATA.events.map(e=>e.cid))].filter(id=>DATA.charById[id]&&num(DATA.charById[id]["登場日"])!=null).sort();sel.innerHTML='<option value="">全体</option>';ids.forEach(id=>{const o=document.createElement("option");o.value=id;o.textContent=DATA.charById[id]["名前"]||id;sel.appendChild(o);});}
@@ -487,36 +484,10 @@ function loadBgDims(url,cb){const img=new Image();img.onload=()=>{S.imgW=img.nat
 function applyBg(url){S.bg=url;S.style="image";[...$("styleSeg").children].forEach(x=>x.classList.toggle("on",x.dataset.style==="image"));render();}
 $("bgBtn").onclick=()=>$("bgFile").click();
 $("bgFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const url=ev.target.result;try{localStorage.setItem("opbg",url);}catch(_){}S.cal=null;try{localStorage.removeItem("opcal");}catch(_){}loadBgDims(url,()=>applyBg(url));};r.readAsDataURL(f);};
-function rowsOf(wb,name){const ws=wb.Sheets[name];if(!ws)return[];const arr=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});if(!arr.length)return[];const h=arr[0].map(x=>x==null?"":String(x).trim());return arr.slice(1).filter(r=>r.some(c=>c!=null&&c!=="")).map(r=>{const o={};h.forEach((k,i)=>{if(k)o[k]=r[i];});return o;});}
-function buildDataFromWB(wb){const nn=v=>{if(v==null||v==="")return null;const n=Number(v);return isNaN(n)?null:n;};const fl=v=>{const x=String(v==null?"":v).trim();return (x==="1"||x==="1.0")?1:0;};
-  const cf=["名前","二つ名","所属","役職","種族","性別","血液型","出身島・国","初登場時の年齢","今の年齢","誕生年（海円暦）","勢力ID","悪魔の実","武器","船ID","所属船","登場日","退場日","初登場巻","重要度","覇気"];
-  const ch=rowsOf(wb,"キャラクターマスタ"),pl=rowsOf(wb,"場所マスタ"),vo=rowsOf(wb,"航海日誌"),fa=rowsOf(wb,"勢力マスタ"),bo=rowsOf(wb,"懸賞金・肩書ログ"),af=rowsOf(wb,"所属ログ"),sk=rowsOf(wb,"技ログ"),ba=rowsOf(wb,"戦闘ログ"),su=rowsOf(wb,"サブタイトルデータ"),vm=rowsOf(wb,"巻数対応表"),fr=rowsOf(wb,"悪魔の実マスタ"),we=rowsOf(wb,"刀・武器マスタ"),sh=rowsOf(wb,"船マスタ");
-  const charById={};ch.forEach(c=>{if(c["登場キャラID"]){const o={};cf.forEach(k=>o[k]=c[k]);charById[c["登場キャラID"]]=o;}});
-  const placeById={};pl.forEach(p=>{if(p["場所ID"])placeById[p["場所ID"]]={name:p["表示名"]||p["地名"]||p["場所ID"],region:p["地域"]||"その他",x:nn(p["X"]),y:nn(p["Y"])};});
-  const events=[];vo.forEach(v=>{const cid=v["登場キャラID"],lid=v["場所ID"],t=nn(v["通算日"]),vol=nn(v["巻数"]);if(cid&&lid&&placeById[lid]&&t!=null&&vol!=null)events.push({cid,lid,t,vol,ep:v["出来事"]||""});});
-  const facById={};fa.forEach(f=>{if(f["勢力ID"])facById[f["勢力ID"]]={name:f["勢力名"],kind:f["区分"],f0t:nn(f["結成日"]),f1t:nn(f["解散日"]),f0v:nn(f["結成巻"]),f1v:nn(f["解散巻"])};});
-  const bountyLog=bo.filter(b=>b["登場キャラID"]).map(b=>({cid:b["登場キャラID"],amount:nn(b["懸賞金"]),title:b["肩書"]||"",vol:nn(b["巻数"]),t:nn(b["通算日"])}));
-  const affLog=af.filter(a=>a["登場キャラID"]).map(a=>({cid:a["登場キャラID"],fac:a["勢力ID"],group:a["所属グループ"]||"",role:a["役職"]||"",jVol:nn(a["加入巻数"]),lVol:nn(a["脱退巻数"]),jT:nn(a["通算日"]),lT:nn(a["脱退年（通算日）"])}));
-  const skillLog=sk.filter(s=>s["使用者ID"]).map(s=>({uid:s["使用者ID"],uname:s["使用者"]||"",mname:s["技名"]||"",vol:nn(s["巻数"]),t:nn(s["通算日"]),fin:fl(s["決まり手フラグ"]),tgt:s["相手"]||""}));
-  const battleLog=ba.filter(b=>b["バトルID"]).map(b=>({id:b["バトルID"],vol:nn(b["巻数"]),t:nn(b["通算日"]),lid:b["場所ID"],place:b["場所"]||"",wfac:b["勝者勢力"]||"",w:[b["勝者ID1"],b["勝者ID2"]].filter(Boolean),wn:[b["勝者1"],b["勝者2"]].filter(Boolean),lfac:b["敗者勢力"]||"",l:[b["敗者ID1"],b["敗者ID2"]].filter(Boolean),ln:[b["敗者1"],b["敗者2"]].filter(Boolean),move:b["決まり手"]||"",type:b["バトルの種類"]||"",res:b["決着区分"]||"",army:fl(b["軍団戦フラグ"])}));
-  const subtitles=su.filter(s=>s["話数"]!=null).map(s=>({vol:nn(s["巻数"]),ep:nn(s["話数"]),sub:s["サブタイトル"]||""}));
-  const volMap=vm.filter(v=>v["巻数"]!=null).map(v=>({vol:nn(v["巻数"]),ep:nn(v["話数"]),epName:v["エピソード名"]||"",subEp:v["サブエピソード"]||"",island:v["舞台（島）"]||"",era:v["時代区分"]||""}));
-  const fruits=fr.filter(f=>f["実ID"]).map(f=>({id:f["実ID"],name:f["実の名前"],type:f["系統"]||"",cid:f["キャラID"],user:f["能力者"]||"",awake:fl(f["覚醒フラグ"]),vol:nn(f["入手巻数"])}));
-  const weapons=we.filter(w=>w["武器ID"]).map(w=>({id:w["武器ID"],name:w["武器名"],rank:w["位列"]||"",cid:w["所有者ID"],owner:w["所有者"]||"",maker:w["製作者"]||""}));
-  const ships=sh.filter(x=>x["船ID"]).map(x=>({id:x["船ID"],name:x["船名"],owner:x["持ち主"]||"",builder:x["造船者"]||"",mat:x["材質"]||"",state:x["状態"]||""}));
-  return {charById,placeById,events,facById,bountyLog,affLog,skillLog,battleLog,subtitles,volMap,fruits,weapons,ships};}
-$("updBtn").onclick=()=>$("updFile").click();
-$("updFile").onchange=e=>{const f=e.target.files[0];if(!f)return;if(typeof XLSX==="undefined"){alert("更新用ライブラリを読み込めませんでした。オンライン環境で開いて再試行してください。");return;}
-  const r=new FileReader();r.onload=ev=>{try{const wb=XLSX.read(new Uint8Array(ev.target.result),{type:"array"});const p=buildDataFromWB(wb);
-    if(!Object.keys(p.charById).length){alert("シートを認識できませんでした。元と同じシート名・列名かご確認ください。");return;}
-    Object.keys(p).forEach(k=>DATA[k]=p[k]);try{localStorage.setItem("opdata",JSON.stringify(p));}catch(_){}
-    initDerived();S.idx=0;S.facSel="";S.quiz=null;buildSpoiler();populateFocus();buildFacSel();buildRankChar();rebuildStops();renderActive();
-    alert("データを更新しました（このブラウザに保存）。");}catch(err){alert("更新に失敗: "+err.message);}};r.readAsArrayBuffer(f);};
 window.addEventListener("resize",()=>{if(S.tab==="map")render();});
-try{const sd=localStorage.getItem("opdata");if(sd)Object.assign(DATA,JSON.parse(sd));}catch(_){}
 initDerived();
 buildSpoiler();populateFocus();buildFacSel();buildRankChar();rebuildStops();
-try{localStorage.removeItem("opbg");localStorage.removeItem("opcal");}catch(_){}
+try{localStorage.removeItem("opbg");localStorage.removeItem("opcal");localStorage.removeItem("opdata");}catch(_){}
 render();
 (function(){let vc=1;try{vc=Number(localStorage.getItem("opviews")||"0")+1;localStorage.setItem("opviews",String(vc));}catch(_){}$("viewCount").textContent=vc.toLocaleString();})();
 $("aboutBtn").onclick=()=>$("aboutModal").classList.add("show");
