@@ -167,7 +167,7 @@ const BASE_YEAR = DATA.baseYear||1539;
 const CAL = DATA.imgCal;
 const REF=[{id:'L-001',name:'フーシャ村'},{id:'L-021',name:'ローグタウン'}];
 let affCids,MAXV;
-function initDerived(){for(const id in DATA.placeById)DATA.placeById[id].id=id;affCids=new Set(DATA.affLog.map(a=>a.cid));MAXV=Math.ceil(Math.max(...DATA.events.map(e=>e.vol)));}
+function initDerived(){for(const id in DATA.placeById)DATA.placeById[id].id=id;affCids=new Set(DATA.affLog.map(a=>a.cid));MAXV=Math.ceil(Math.max(...DATA.events.map(e=>e.vol),...DATA.volMap.map(v=>v.vol||0)));}
 const S={tab:"map",basis:"volume",style:"zone",stops:[],idx:0,maxVol:999,focus:"",trail:false,flashback:false,labels:true,autozoom:true,
   playing:false,timer:null,proj:null,bg:null,imgW:CAL.imgW,imgH:CAL.imgH,cal:null,calStep:0,calClicks:[],rankMode:"bi",rankChar:"",facSel:"",facPins:[],battleChar:"",fGender:"",fRace:"",fBlood:"",quiz:null,quizScore:0,quizTotal:0,quizAnswered:false,quizPick:null,dictCat:"char",dictSearch:"",dictG:"",dictR:"",legCollapsed:false};
 const SVGNS="http://www.w3.org/2000/svg";const $=id=>document.getElementById(id);
@@ -237,7 +237,7 @@ function view(vis){
 function buildSpoiler(){const sel=$("spoiler");sel.innerHTML='<option value="999">全巻</option>';for(let v=1;v<=MAXV;v++){const o=document.createElement("option");o.value=v;o.textContent=v;sel.appendChild(o);}sel.value="999";S.maxVol=999;sel.onchange=()=>{S.maxVol=Number(sel.value);S.idx=0;S.quiz=null;rebuildStops();renderActive();};}
 function populateFocus(){const sel=$("focus");const ids=[...new Set(DATA.events.map(e=>e.cid))].filter(id=>DATA.charById[id]&&num(DATA.charById[id]["登場日"])!=null).sort();sel.innerHTML='<option value="">全体</option>';ids.forEach(id=>{const o=document.createElement("option");o.value=id;o.textContent=DATA.charById[id]["名前"]||id;sel.appendChild(o);});}
 function rebuildStops(){const ev=DATA.events.filter(e=>e.vol<=S.maxVol);let stops;
-  if(S.basis==="volume")stops=[...new Set(ev.map(e=>Math.ceil(e.vol)))].sort((a,b)=>a-b);
+  if(S.basis==="volume"){const top=Math.min(MAXV,S.maxVol);stops=[];for(let v=1;v<=top;v++)stops.push(v);if(!stops.length)stops=[1];}
   else{let ts=ev.map(e=>e.t);if(!S.flashback)ts=ts.filter(t=>t>=0);stops=[...new Set(ts)].sort((a,b)=>a-b);}
   if(!stops.length)stops=[0];S.stops=stops;if(S.idx>stops.length-1)S.idx=stops.length-1;const sl=$("slider");sl.max=stops.length-1;sl.value=S.idx;}
 function positionsNow(){const cut=currentTime();const res={};
