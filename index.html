@@ -181,7 +181,7 @@ function curT(){return curVol()?refTime():currentTime();}
 function facExists(fid){const f=DATA.facById[fid];if(!f)return true;
   if(curVol()&&(f.f0v!=null||f.f1v!=null)){const cv=Math.ceil(currentTime());if(f.f0v!=null&&cv<f.f0v)return false;if(f.f1v!=null&&cv>f.f1v)return false;return true;}
   const t=curT();if(f.f0t!=null&&t<f.f0t)return false;if(f.f1t!=null&&t>f.f1t)return false;return true;}
-function tForVol(v){let best=null;for(const r of DATA.volMap){if(r.vol==null||r.vol>v||r.t==null)continue;if(!best||r.vol>best.vol||(r.vol===best.vol&&r.t>best.t))best=r;}if(best)return best.t;let mx=0;for(const e of DATA.events){if(e.vol<=v&&e.t>=0&&e.t>mx)mx=e.t;}return mx;}
+function tForVol(v){let tv=null;for(const r of DATA.volMap){if(r.vol==null||r.vol>v||r.t==null)continue;if(tv==null||r.t>tv)tv=r.t;}let mx=0;for(const e of DATA.events){if(e.vol<=v&&e.t>=0&&e.t>mx)mx=e.t;}return Math.max(tv==null?-1e9:tv,mx);}
 function affAtT(cid,t){let best=null;for(const a of DATA.affLog){if(a.cid!==cid)continue;if(a.jT==null||t<a.jT)continue;if(a.lT!=null&&t>=a.lT)continue;if(!best||a.jT>best.jT)best=a;}return best;}
 function affNow(cid){return affAtT(cid,curT());}
 function currentTime(){return S.stops[S.idx];}
@@ -200,7 +200,7 @@ function affInfo(cid){const c=DATA.charById[cid];const a=affNow(cid);
 function passCut(vol,t){const cut=currentTime();return curVol()?(vol!=null&&vol<=cut):(t!=null&&t<=cut&&(S.flashback||t>=0));}
 function bountyCur(cid){let best=null;for(const b of DATA.bountyLog){if(b.cid!==cid||b.amount==null)continue;if(!passCut(b.vol,b.t))continue;const k=curVol()?b.vol:b.t;if(!best||k>(curVol()?best.vol:best.t))best=b;}return best?best.amount:null;}
 function bountyRowCur(cid){let best=null;for(const b of DATA.bountyLog){if(b.cid!==cid)continue;if(!passCut(b.vol,b.t))continue;const k=curVol()?b.vol:b.t;if(!best||k>(curVol()?best.vol:best.t))best=b;}return best;}
-function facCur(cid){const a=affNow(cid);if(a&&a.fac)return a.fac;const m=DATA.charById[cid];return m?(m["勢力ID"]||null):null;}
+function facCur(cid){const a=affNow(cid);if(a&&a.fac)return a.fac;if(affCids.has(cid))return null;const m=DATA.charById[cid];return m?(m["勢力ID"]||null):null;}
 function aliveCur(cid){const c=DATA.charById[cid];if(!c)return false;const cut=currentTime();const t=curT();
   if(curVol()){const fv=num(c["初登場巻"]);if(fv!=null&&cut<fv)return false;}else{const app=num(c["登場日"]);if(app!=null&&cut<app)return false;}
   const lv=num(c["退場日"]);if(lv!=null&&lv<t)return false;
@@ -348,7 +348,7 @@ function renderRank(){
 // ===== 勢力変遷（スライダー基準）=====
 function buildFacSel(){const sel=$("facSel");let facs=[...new Set(DATA.affLog.map(a=>a.fac).filter(Boolean))].filter(f=>facExists(f)&&facHasMembers(f));facs.sort((a,b)=>facName(a).localeCompare(facName(b),"ja"));sel.innerHTML=facs.map(f=>`<option value="${f}">${facName(f)}</option>`).join("");if(!facs.includes(S.facSel))S.facSel=facs[0]||"";sel.value=S.facSel;
   const cs=$("facCharSel");const ids=Object.keys(DATA.charById).filter(id=>num(DATA.charById[id]["誕生年（海円暦）"])!=null).sort((a,b)=>(DATA.charById[a]["名前"]||"").localeCompare(DATA.charById[b]["名前"]||"","ja"));cs.innerHTML='<option value="">選択して詳細表示…</option>'+ids.map(id=>`<option value="${id}">${DATA.charById[id]["名前"]||id}</option>`).join("");}
-function facTotalAtVol(fac,cut){let sum=0,n=0;for(const cid in DATA.charById){const c=DATA.charById[cid];if(num(c["誕生年（海円暦）"])==null)continue;const fv=num(c["初登場巻"]);if(fv!=null&&fv>cut)continue;const a=affAtT(cid,tForVol(cut));const f=(a&&a.fac)||c["勢力ID"];if(f!==fac)continue;n++;let bb=null;for(const b of DATA.bountyLog){if(b.cid!==cid||b.amount==null||b.vol==null||b.vol>cut)continue;if(!bb||b.vol>bb.vol)bb=b;}if(bb)sum+=bb.amount;}return {sum,n};}
+function facTotalAtVol(fac,cut){let sum=0,n=0;for(const cid in DATA.charById){const c=DATA.charById[cid];if(num(c["誕生年（海円暦）"])==null)continue;const fv=num(c["初登場巻"]);if(fv!=null&&fv>cut)continue;const a=affAtT(cid,tForVol(cut));let f=a&&a.fac;if(!f)f=affCids.has(cid)?null:c["勢力ID"];if(f!==fac)continue;n++;let bb=null;for(const b of DATA.bountyLog){if(b.cid!==cid||b.amount==null||b.vol==null||b.vol>cut)continue;if(!bb||b.vol>bb.vol)bb=b;}if(bb)sum+=bb.amount;}return {sum,n};}
 function sparkline(fac){const w=260,h=46,pad=4;const vals=[];for(let v=1;v<=MAXV;v++)vals.push(facTotalAtVol(fac,v).sum);const max=Math.max(1,...vals);let d="";vals.forEach((vv,i)=>{const x=pad+(i/(MAXV-1||1))*(w-2*pad);const y=h-pad-(vv/max)*(h-2*pad);d+=(i?"L":"M")+x.toFixed(1)+" "+y.toFixed(1)+" ";});return `<svg width="${w}" height="${h}" style="max-width:100%"><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2"/></svg>`;}
 function renderFaction(){
   const fac=S.facSel;const body=$("facBody");$("facNote").textContent=timeLabel();if(!fac||!facExists(fac)){body.innerHTML='<div class="card" style="color:var(--muted)">この時点で存在する勢力がありません。</div>';return;}
