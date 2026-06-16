@@ -136,7 +136,7 @@ table.mt th{color:var(--muted);font-weight:700;font-size:11px}
       </div>
       <div id="facBody"></div>
     </div>
-    <div class="panel" id="battlePanel"><div class="panelhead"><span style="font-size:12px;color:var(--muted)">キャラ絞り込み</span><select class="mini" id="battleCharSel"><option value="">全バトル</option></select><span style="font-size:12px;color:var(--muted)" id="battleNote"></span></div><div id="battleBody"></div></div>
+    <div class="panel" id="battlePanel"><div class="panelhead"><span style="font-size:12px;color:var(--muted)">キャラ絞り込み</span><select class="mini" id="battleCharSel"><option value="">全バトル</option></select><div class="seg" id="battleSortSeg"><button data-bs="rate" class="on">勝率</button><button data-bs="win">勝ち数</button><button data-bs="lose">負け数</button><button data-bs="tot">試合数</button></div><span style="font-size:12px;color:var(--muted)" id="battleNote"></span></div><div id="battleBody"></div></div>
     <div class="panel" id="statsPanel"><div class="panelhead"><span style="font-size:12px;color:var(--muted)" id="statsNote"></span></div><div id="statsBody"></div></div>
     <div class="panel" id="quizPanel"><div id="quizBody" style="max-width:560px;margin:0 auto"></div></div>
     <div class="placeholder" id="ph" style="display:none"></div>
@@ -169,7 +169,7 @@ const REF=[{id:'L-001',name:'フーシャ村'},{id:'L-021',name:'ローグタウ
 let affCids,MAXV;
 function initDerived(){for(const id in DATA.placeById)DATA.placeById[id].id=id;affCids=new Set(DATA.affLog.map(a=>a.cid));MAXV=Math.ceil(Math.max(...DATA.events.map(e=>e.vol),...DATA.volMap.map(v=>v.vol||0)));}
 const S={tab:"map",basis:"volume",style:"zone",stops:[],idx:0,maxVol:999,focus:"",trail:false,flashback:false,labels:true,autozoom:true,
-  playing:false,timer:null,proj:null,bg:null,imgW:CAL.imgW,imgH:CAL.imgH,cal:null,calStep:0,calClicks:[],rankMode:"bi",rankChar:"",facSel:"",facPins:[],battleChar:"",fGender:"",fRace:"",fBlood:"",quiz:null,quizScore:0,quizTotal:0,quizAnswered:false,quizPick:null,dictCat:"char",dictSearch:"",dictG:"",dictR:"",legCollapsed:false};
+  playing:false,timer:null,proj:null,bg:null,imgW:CAL.imgW,imgH:CAL.imgH,cal:null,calStep:0,calClicks:[],rankMode:"bi",rankChar:"",facSel:"",facPins:[],battleChar:"",battleSort:"rate",fGender:"",fRace:"",fBlood:"",quiz:null,quizScore:0,quizTotal:0,quizAnswered:false,quizPick:null,dictCat:"char",dictSearch:"",dictG:"",dictR:"",legCollapsed:false};
 const SVGNS="http://www.w3.org/2000/svg";const $=id=>document.getElementById(id);
 const num=v=>{if(v==null||v==="")return null;const n=Number(v);return isNaN(n)?null:n};
 const yen=n=>Number(n).toLocaleString();
@@ -385,14 +385,18 @@ function renderBattle(){$("battleNote").textContent=timeLabel();
   const cs=$("battleCharSel");const ids=[...cset].sort((a,b)=>((DATA.charById[a]&&DATA.charById[a]["名前"])||a).localeCompare((DATA.charById[b]&&DATA.charById[b]["名前"])||b,"ja"));
   cs.innerHTML='<option value="">全バトル</option>'+ids.map(id=>`<option value="${id}">${(DATA.charById[id]&&DATA.charById[id]["名前"])||id}</option>`).join("");cs.value=S.battleChar||"";
   let rates=[...cset].map(cid=>{let w=0,l=0;for(const b of list){if(b.res&&b.res!=="決着")continue;if(b.w.includes(cid))w++;else if(b.l.includes(cid))l++;}return{cid,name:(DATA.charById[cid]&&DATA.charById[cid]["名前"])||cid,w,l,tot:w+l,rate:(w+l)?w/(w+l):0};}).filter(r=>r.tot>0);
-  rates.sort((a,b)=>b.rate-a.rate||b.tot-a.tot);
+  const SK=S.battleSort||"rate";
+  const cmp={rate:(a,b)=>b.rate-a.rate||b.tot-a.tot,win:(a,b)=>b.w-a.w||b.rate-a.rate,lose:(a,b)=>b.l-a.l||b.tot-a.tot,tot:(a,b)=>b.tot-a.tot||b.rate-a.rate}[SK];
+  rates.sort(cmp);
   if(S.battleChar)rates=rates.filter(r=>r.cid===S.battleChar);
-  const rateItems=rates.slice(0,20).map(r=>({label:r.name,sub:`${r.w}勝${r.l}敗`,val:r.rate,disp:Math.round(r.rate*100)+"%",col:"#5fd38a"}));
+  const dispOf=r=>SK==="rate"?Math.round(r.rate*100)+"%":SK==="win"?r.w+"勝":SK==="lose"?r.l+"敗":r.tot+"戦";
+  const valOf=r=>SK==="rate"?r.rate:SK==="win"?r.w:SK==="lose"?r.l:r.tot;
+  const rateItems=rates.slice(0,30).map(r=>({label:r.name,sub:`${r.w}勝${r.l}敗・${r.tot}戦`,val:valOf(r),disp:dispOf(r),col:SK==="lose"?"#ff8a5c":"#5fd38a"}));
   let bl=list.slice();if(S.battleChar)bl=bl.filter(b=>b.w.includes(S.battleChar)||b.l.includes(S.battleChar));
   bl.sort((a,b)=>(b.vol||0)-(a.vol||0));
   const row=b=>{const win=b.wn.length?b.wn.join("・"):(b.wfac||"");const lose=b.ln.length?b.ln.join("・"):(b.lfac||"");const draw=b.res&&b.res!=="決着";
     return `<div style="border-bottom:1px solid var(--line);padding:7px 0;font-size:12.5px"><span style="color:var(--accent)">第${b.vol}巻</span> <span style="color:var(--muted)">${b.place||""}・${b.type||""}${b.army?"・軍団戦":""}</span>${draw?` <span style="color:#ff8a5c">${b.res}</span>`:""}<br>${!draw?`<b style="color:var(--good)">${win||"?"}</b> ▶ ${lose||"?"}`:`<span style="color:var(--muted)">${[...b.wn,...b.ln].join("・")||[b.wfac,b.lfac].filter(Boolean).join(" / ")||"—"}</span>`}${b.move?` <span style="color:var(--muted)">／${b.move}</span>`:""}</div>`;};
-  $("battleBody").innerHTML=`<div class="card"><h3>勝率ランキング</h3>${rateItems.length?bars(rateItems):'<span style="color:var(--muted)">データなし</span>'}</div><div class="card"><h3>バトル一覧（新しい巻順）</h3>${bl.length?bl.map(row).join(""):'<span style="color:var(--muted)">この時点ではバトルがありません</span>'}</div>`;}
+  $("battleBody").innerHTML=`<div class="card"><h3>${({rate:"勝率",win:"勝ち数",lose:"負け数",tot:"試合数"})[SK]}ランキング</h3>${rateItems.length?bars(rateItems):'<span style="color:var(--muted)">データなし</span>'}</div><div class="card"><h3>バトル一覧（新しい巻順）</h3>${bl.length?bl.map(row).join(""):'<span style="color:var(--muted)">この時点ではバトルがありません</span>'}</div>`;}
 function renderBounty(){$("bountyNote").textContent=timeLabel();
   const cv=Object.values(DATA.charById);
   fillSel("fGender",[...new Set(cv.map(c=>c["性別"]).filter(Boolean))].sort(),S.fGender,"性別：全");
@@ -474,6 +478,7 @@ function step(){if(!S.playing)return;S.idx=S.idx>=S.stops.length-1?0:S.idx+1;ren
 $("rankSeg").addEventListener("click",e=>{const r=e.target.dataset.rk;if(!r)return;S.rankMode=r;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x.dataset.rk===r));renderRank();});
 $("rankCharSel").onchange=e=>{S.rankChar=e.target.value;renderRank();};
 $("battleCharSel").onchange=e=>{S.battleChar=e.target.value;renderBattle();};
+$("battleSortSeg").addEventListener("click",e=>{const v=e.target.dataset.bs;if(!v)return;S.battleSort=v;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x.dataset.bs===v));renderBattle();});
 $("fGender").onchange=e=>{S.fGender=e.target.value;renderRank();};
 $("fRace").onchange=e=>{S.fRace=e.target.value;renderRank();};
 $("fBlood").onchange=e=>{S.fBlood=e.target.value;renderRank();};
