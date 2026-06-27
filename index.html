@@ -242,8 +242,9 @@ function affInfo(cid){const c=DATA.charById[cid];const a=affNow(cid);
 
 // ===== 現在時点ヘルパ（スライダー基準・全タブ共通）=====
 function passCut(vol,t){const cut=currentTime();return curVol()?(vol!=null&&vol<=cut):(t!=null&&t<=cut&&(S.flashback||t>=0));}
-function bountyCur(cid){let best=null;for(const b of DATA.bountyLog){if(b.cid!==cid||b.amount==null)continue;if(!passCut(b.vol,b.t))continue;const k=curVol()?b.vol:b.t;if(!best||k>(curVol()?best.vol:best.t))best=b;}return best?best.amount:null;}
-function bountyRowCur(cid){let best=null;for(const b of DATA.bountyLog){if(b.cid!==cid)continue;if(!passCut(b.vol,b.t))continue;const k=curVol()?b.vol:b.t;if(!best||k>(curVol()?best.vol:best.t))best=b;}return best;}
+function bountyPass(vol,t){const cut=currentTime();return curVol()?(vol!=null&&vol<=cut):(t!=null&&t<=cut);}   // 懸賞金は発行が過去(負の通算日)でも現在有効＝回想フィルタに依存させない
+function bountyCur(cid){let best=null;for(const b of DATA.bountyLog){if(b.cid!==cid||b.amount==null)continue;if(!bountyPass(b.vol,b.t))continue;const k=curVol()?b.vol:b.t;if(!best||k>(curVol()?best.vol:best.t))best=b;}return best?best.amount:null;}
+function bountyRowCur(cid){let best=null;for(const b of DATA.bountyLog){if(b.cid!==cid)continue;if(!bountyPass(b.vol,b.t))continue;const k=curVol()?b.vol:b.t;if(!best||k>(curVol()?best.vol:best.t))best=b;}return best;}
 function facCur(cid){const a=affNow(cid);if(a&&a.fac)return a.fac;if(affCids.has(cid))return null;const m=DATA.charById[cid];return m?(m["勢力ID"]||null):null;}
 function aliveCur(cid){const c=DATA.charById[cid];if(!c)return false;const cut=currentTime();const t=curT();
   if(curVol()){const fv=num(c["初登場巻"]);if(fv!=null&&cut<fv)return false;}else{const app=num(c["登場日"]);if(app!=null&&cut<app)return false;}
