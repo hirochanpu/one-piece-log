@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>ONE PIECE デジタル航海日誌</title>
+<title>ONE PIECE デジタル航海日誌（新デザイン）</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <meta name="theme-color" content="#0b1726">
 <link rel="apple-touch-icon" href="./icon-192.png">
@@ -12,8 +12,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="航海日誌">
 <style>
-:root{--bg:#0b1726;--panel:#11233b;--panel2:#16304f;--line:#27425f;--ink:#eaf2fb;--muted:#9fb6cf;
---accent:#ffd34d;--accent2:#37c0ff;--sea1:#13374f;--sea2:#091d31;--good:#5fd38a}
+:root{--bg:#081120;--panel:#122540;--panel2:#18314f;--line:#26405f;--line2:#33507a;--ink:#eef5fd;--muted:#9db4cd;--dim:#6f89a6;
+--accent:#ffd34d;--accent2:#3ec8ff;--sea1:#14395a;--sea2:#081a2e;--good:#5fd38a}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI",system-ui,sans-serif;-webkit-text-size-adjust:100%}
 button,select,input{font-family:inherit}
@@ -94,6 +94,80 @@ table.mt th{color:var(--muted);font-weight:700;font-size:11px}
 .modal .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:560px;width:100%;max-height:84vh;overflow:auto;padding:20px 22px}
 .modal h2{margin:0 0 6px;font-size:18px}.modal h3{font-size:12px;color:var(--accent);margin:14px 0 4px;letter-spacing:.5px}
 .modal p{font-size:13px;line-height:1.75;margin:4px 0}.modal .close{float:right;cursor:pointer;color:var(--muted);background:none;border:0;font-size:22px}
+
+/* ═══════════ v2 redesign ═══════════ */
+body{background:radial-gradient(120% 80% at 70% -10%,#12304e 0%,transparent 60%),radial-gradient(100% 70% at 10% 110%,#0e2440 0%,transparent 55%),var(--bg)}
+.tabs{display:none}
+.app{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+header{background:rgba(8,17,32,.92);border-bottom:1px solid var(--line);padding:10px 14px}
+.spoilpill{display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#1b3355,#122540);border:1px solid var(--accent);border-radius:999px;padding:7px 13px;cursor:pointer;font-size:12.5px;font-weight:700;color:var(--ink)}
+.spoilpill b{color:var(--accent)}
+.spoilpill .chev{color:var(--muted);font-size:10px}
+.controls{order:2;background:var(--panel);border:1px solid var(--line2);border-radius:16px;margin:8px 10px;padding:10px 12px;box-shadow:0 8px 26px rgba(0,0,0,.35)}
+.foot{order:3;background:transparent;border-top:0}
+.play{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),#1f9fd8);font-size:18px;box-shadow:0 4px 14px rgba(62,200,255,.3);flex:none}
+.ctlmain{flex:1 1 300px}
+.ctlmain input[type=range]{flex:1 1 120px;width:auto;min-width:100px}
+.timelab{font-size:14px}
+.seg{border-radius:10px}
+.seg button{padding:9px 13px}
+select.mini{padding:8px 10px;border-radius:9px}
+.chk{border:1px solid var(--line2);background:var(--panel2);border-radius:999px;padding:8px 13px;font-weight:700;color:var(--muted)}
+.chk input{display:none}
+.chk.on{background:var(--accent2);border-color:var(--accent2);color:#04263a}
+.chip{border:1px solid var(--line2);background:var(--panel2);color:var(--muted);border-radius:999px;padding:8px 13px;font-size:12px;font-weight:700;cursor:pointer}
+.chip.on{background:var(--accent2);border-color:var(--accent2);color:#04263a}
+#zukanBar{display:none;gap:6px;overflow-x:auto;padding:8px 12px 2px}
+#zukanBar.show{display:flex}
+#zukanBar .chip{white-space:nowrap;padding:9px 15px;font-size:13px}
+nav.vnav{position:fixed;left:0;right:0;bottom:0;height:calc(60px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);display:flex;z-index:40;background:rgba(8,16,30,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+nav.vnav button{flex:1;background:none;border:0;color:var(--dim);font-size:10px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+nav.vnav button .i{font-size:21px;line-height:1}
+nav.vnav button.on{color:var(--accent)}
+.homewrap{max-width:860px;margin:0 auto}
+.hero{background:linear-gradient(135deg,#13294a,#0d1e38);border:1px solid var(--line2);border-radius:18px;padding:18px;position:relative;overflow:hidden;margin-bottom:14px}
+.hero::after{content:"🏴‍☠️";position:absolute;right:-6px;bottom:-14px;font-size:84px;opacity:.1;transform:rotate(-12deg)}
+.hero .ttl{font-size:13px;color:var(--muted);font-weight:700}
+.hero .big{font-size:24px;font-weight:900}
+.hero .big b{color:var(--accent)}
+.progressbar{margin-top:10px;background:#0a1830;border-radius:99px;height:10px;overflow:hidden;border:1px solid var(--line)}
+.progressbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:99px}
+.hero .sub{margin-top:7px;font-size:11.5px;color:var(--muted)}
+.statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center}
+.stat .n{font-size:19px;font-weight:900;color:var(--accent2)}
+.stat .l{font-size:10.5px;color:var(--muted);margin-top:2px}
+.sechead{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:1px;margin:18px 2px 10px}
+.featgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:640px){.featgrid{grid-template-columns:repeat(3,1fr)}}
+.feat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:transform .12s,border-color .12s}
+.feat:active{transform:scale(.97)}
+.feat:hover{border-color:var(--accent2)}
+.feat .ic{font-size:26px;margin-bottom:6px}
+.feat .nm{font-weight:800;font-size:14px}
+.feat .ds{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5}
+.listitem{display:flex;align-items:center;gap:12px;padding:13px 8px;border-bottom:1px solid var(--line);cursor:pointer}
+.listitem:last-child{border-bottom:0}
+.listitem .ic{font-size:22px}
+.listitem .tx{flex:1}
+.listitem .tx .t{font-weight:800;font-size:14px}
+.listitem .tx .d{font-size:11px;color:var(--muted);margin-top:2px}
+.listitem .go{color:var(--dim)}
+#spoilModal{align-items:flex-end}
+@media(min-width:640px){#spoilModal{align-items:center}}
+.sheet{background:var(--panel);border:1px solid var(--line2);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:20px 18px 26px}
+@media(min-width:640px){.sheet{border-radius:20px}}
+.sheet h2{margin:0 0 4px;font-size:17px}
+.sheet p{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.7}
+.volgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;max-height:38vh;overflow:auto}
+.volgrid button{padding:11px 0;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-weight:800;font-size:13px;cursor:pointer}
+.volgrid button.on{background:var(--accent);color:#241a00;border-color:var(--accent)}
+.volgrid button.all{grid-column:span 3}
+.sheet .done{margin-top:14px;width:100%;padding:13px;border-radius:12px;border:0;background:var(--accent2);color:#04263a;font-weight:900;font-size:14px;cursor:pointer}
+#rankBody>.barrow,#battleBody .barrow{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin:8px 0}
+#rankBody>.barrow .track{height:8px}
+#rankBody>.barrow:nth-child(-n+3) .rank{color:var(--accent);font-size:15px}
+.card{border-radius:14px}
 </style>
 </head>
 <body>
@@ -101,7 +175,8 @@ table.mt th{color:var(--muted);font-weight:700;font-size:11px}
   <header>
     <div class="brand">🏴‍☠️ ONE PIECE <small>デジタル航海日誌</small></div>
     <div class="spacer"></div>
-    <div class="spoiler"><label for="spoiler">ネタバレ：</label><select id="spoiler"></select><span style="font-size:11px;color:var(--muted)">巻まで</span></div>
+    <button class="spoilpill" id="spoilPill" type="button"><span>👁️</span><span id="spoilLab">全巻表示</span><span class="chev">▼</span></button>
+    <div class="spoiler" style="display:none"><select id="spoiler"></select></div>
   </header>
   <div class="tabs">
     <div class="tab active" data-tab="map">🗺️ マップ＆移動</div>
@@ -114,9 +189,16 @@ table.mt th{color:var(--muted);font-weight:700;font-size:11px}
     <div class="tab" data-tab="fruit">🍎 悪魔の実</div>
     <div class="tab" data-tab="quiz">❓ クイズ</div>
   </div>
+  <div id="zukanBar">
+    <button class="chip on" data-go="rank" type="button">🏆 ランキング</button>
+    <button class="chip" data-go="faction" type="button">⚔️ 勢力変遷</button>
+    <button class="chip" data-go="battle" type="button">🗡️ バトル</button>
+    <button class="chip" data-go="stats" type="button">📊 統計</button>
+    <button class="chip" data-go="fruit" type="button">🍎 悪魔の実</button>
+  </div>
   <div class="controls" id="mapControls">
     <div class="ctl"><span class="lab">基準</span><div class="seg" id="basisSeg"><button data-basis="volume" class="on">巻数</button><button data-basis="day">通算日</button></div></div>
-    <div class="ctl"><button class="play" id="play">▶</button><input type="range" id="slider" min="0" max="0" value="0" step="1"><span class="timelab" id="timeLab">—</span></div>
+    <div class="ctl ctlmain"><button class="play" id="play">▶</button><input type="range" id="slider" min="0" max="0" value="0" step="1"><span class="timelab" id="timeLab">—</span></div>
     <div class="ctl"><span class="lab">速度</span><select class="mini" id="speed"><option value="1400" selected>遅い</option><option value="800">標準</option><option value="380">速い</option></select></div>
     <label class="chk"><input type="checkbox" id="flashback">回想</label>
     <span id="mapOnly" style="display:contents">
@@ -126,6 +208,7 @@ table.mt th{color:var(--muted);font-weight:700;font-size:11px}
     <label class="chk"><input type="checkbox" id="labels" checked>名前</label>
     <label class="chk"><input type="checkbox" id="trail" checked>軌跡</label>
     <div class="ctl"><span class="lab">拡大</span><div class="seg"><button id="mapZoomOut">－</button><button id="mapZoomIn">＋</button><button id="mapFit">全体</button></div></div>
+    <button class="chip" id="goAdv" type="button">🧭 島の中へ</button>
     </span>
   </div>
   <div class="main">
@@ -164,6 +247,7 @@ table.mt th{color:var(--muted);font-weight:700;font-size:11px}
     </div>
     <div class="panel" id="advPanel">
       <div class="panelhead">
+        <button class="chip" id="advBack" type="button">🗺️ 世界地図へ</button>
         <span class="lab">島</span><select class="mini" id="advIsland"></select>
         <button class="play" id="advPlay">▶</button>
         <input type="range" id="advSlider" min="0" max="0" value="0" step="1" style="width:min(42vw,320px);accent-color:var(--accent);height:28px">
@@ -175,6 +259,41 @@ table.mt th{color:var(--muted);font-weight:700;font-size:11px}
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <div style="flex:1 1 460px;min-width:300px"><svg id="advStage" style="width:100%;height:60vh;display:block;background:radial-gradient(120% 120% at 60% 10%,#13374f,#08263a);border:1px solid var(--line);border-radius:12px" preserveAspectRatio="xMidYMid meet"></svg></div>
         <div style="flex:1 1 250px;min-width:230px"><div class="card"><h3 id="advEvtTitle">出来事</h3><div id="advEvents"></div></div></div>
+      </div>
+    </div>
+    <div class="panel" id="homePanel">
+      <div class="homewrap">
+        <div class="hero">
+          <div class="ttl">現在の閲覧範囲</div>
+          <div class="big" id="heroVol">全巻表示中</div>
+          <div class="progressbar"><i id="heroProg" style="width:100%"></i></div>
+          <div class="sub" id="heroSub"></div>
+        </div>
+        <div class="statrow" id="heroStats"></div>
+        <div class="sechead">⚓ 航海をたどる</div>
+        <div class="featgrid">
+          <div class="feat" data-go="map"><div class="ic">🗺️</div><div class="nm">世界マップ</div><div class="ds">キャラの移動を時系列で再生</div></div>
+          <div class="feat" data-go="adv"><div class="ic">🧭</div><div class="nm">ルフィの冒険</div><div class="ds">島の中の動きを追体験</div></div>
+          <div class="feat" data-go="timeline"><div class="ic">📅</div><div class="nm">キャラ年表</div><div class="ds">人生を並べて比較</div></div>
+        </div>
+        <div class="sechead">📖 データで楽しむ</div>
+        <div class="featgrid">
+          <div class="feat" data-go="rank"><div class="ic">🏆</div><div class="nm">ランキング</div><div class="ds">懸賞金・技・表紙登場</div></div>
+          <div class="feat" data-go="faction"><div class="ic">⚔️</div><div class="nm">勢力変遷</div><div class="ds">結成〜解散とメンバー</div></div>
+          <div class="feat" data-go="battle"><div class="ic">🗡️</div><div class="nm">バトル戦績</div><div class="ds">勝率・決め技</div></div>
+          <div class="feat" data-go="stats"><div class="ic">📊</div><div class="nm">統計</div><div class="ds">種族・年齢・身長分布</div></div>
+          <div class="feat" data-go="fruit"><div class="ic">🍎</div><div class="nm">悪魔の実図鑑</div><div class="ds">系統別に一覧</div></div>
+          <div class="feat" data-go="quiz"><div class="ic">❓</div><div class="nm">クイズ</div><div class="ds">腕試し4択</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel" id="morePanel">
+      <div class="homewrap">
+        <div class="card">
+          <div class="listitem" data-go="timeline"><span class="ic">📅</span><div class="tx"><div class="t">キャラ年表</div><div class="d">複数キャラの人生を並べて比較</div></div><span class="go">›</span></div>
+          <div class="listitem" data-go="quiz"><span class="ic">❓</span><div class="tx"><div class="t">クイズ</div><div class="d">懸賞金・二つ名・種族の4択</div></div><span class="go">›</span></div>
+          <div class="listitem" id="moreAbout"><span class="ic">ℹ️</span><div class="tx"><div class="t">このサイトについて</div><div class="d">非公式ファンサイト・著作権表記</div></div><span class="go">›</span></div>
+        </div>
       </div>
     </div>
     <div class="placeholder" id="ph" style="display:none"></div>
@@ -197,6 +316,18 @@ table.mt th{color:var(--muted);font-weight:700;font-size:11px}
   <p>掲載しているデータは管理者が原作をもとに独自に整理・考察したもので、内容の正確性を保証するものではありません（推測を含みます）。公式のイラスト・漫画のコマ・公式地図などの著作物は使用していません。権利者の方からご連絡をいただいた場合は速やかに対応・削除いたします。</p>
   <h3>プライバシー</h3>
   <p>データはご利用のブラウザ内でのみ処理され、外部サーバーへ送信されません。閲覧数はご利用の端末内でカウントしています。</p>
+</div></div>
+<nav class="vnav" id="vnav">
+  <button data-v="home" class="on" type="button"><span class="i">🏠</span>ホーム</button>
+  <button data-v="map" type="button"><span class="i">🗺️</span>マップ</button>
+  <button data-v="zukan" type="button"><span class="i">📖</span>図鑑</button>
+  <button data-v="more" type="button"><span class="i">☰</span>その他</button>
+</nav>
+<div class="modal" id="spoilModal"><div class="sheet">
+  <h2>👁️ ネタバレ防止設定</h2>
+  <p>読んだことのある巻を選ぶと、それ以降の情報（キャラ・懸賞金・出来事）をすべて隠します。</p>
+  <div class="volgrid" id="volGrid"></div>
+  <button class="done" id="spoilDone" type="button">この設定で見る</button>
 </div></div>
 <script>
 "use strict";
@@ -716,6 +847,79 @@ render();
 $("aboutBtn").onclick=()=>$("aboutModal").classList.add("show");
 $("aboutClose").onclick=()=>$("aboutModal").classList.remove("show");
 $("aboutModal").addEventListener("click",e=>{if(e.target.id==="aboutModal")$("aboutModal").classList.remove("show");});
+</script>
+<script>
+(function(){
+const $v=id=>document.getElementById(id);
+const vTabs={};document.querySelectorAll(".tab").forEach(t=>vTabs[t.dataset.tab]=t);
+const ZUKAN=["rank","faction","battle","stats","fruit"];
+let vScreen="home",zukanTab="rank";
+function pauseAll(){try{mapPause()}catch(_){}try{advPause()}catch(_){}}
+function hideCustom(){$v("homePanel").classList.remove("show");$v("morePanel").classList.remove("show");}
+function hideReal(){
+  $v("stage").style.display="none";$v("legend").style.display="none";$v("mapControls").style.display="none";
+  $v("detail").classList.remove("show");$v("calban").classList.remove("show");
+  document.querySelectorAll(".panel").forEach(p=>{if(p.id!=="homePanel"&&p.id!=="morePanel")p.classList.remove("show");});
+}
+function navSel(){
+  document.querySelectorAll("#vnav button").forEach(b=>b.classList.toggle("on",b.dataset.v===vScreen));
+  $v("zukanBar").classList.toggle("show",vScreen==="zukan");
+  document.querySelectorAll("#zukanBar .chip").forEach(c=>c.classList.toggle("on",c.dataset.go===zukanTab));
+}
+function realGo(tab){hideCustom();if(vTabs[tab])vTabs[tab].click();}
+function vGo(scr,tab){
+  pauseAll();
+  if(scr==="home"){vScreen="home";hideReal();hideCustom();updateHero();$v("homePanel").classList.add("show");}
+  else if(scr==="more"){vScreen="more";hideReal();hideCustom();$v("morePanel").classList.add("show");}
+  else if(scr==="zukan"){vScreen="zukan";if(tab)zukanTab=tab;realGo(zukanTab);}
+  else{vScreen="map";realGo(tab||"map");}
+  navSel();window.scrollTo(0,0);
+}
+document.querySelectorAll("#vnav button").forEach(b=>b.onclick=()=>vGo(b.dataset.v));
+document.querySelectorAll("[data-go]").forEach(el=>{
+  if(el.closest("#vnav"))return;
+  el.addEventListener("click",()=>{const t=el.dataset.go;
+    if(ZUKAN.indexOf(t)>=0)vGo("zukan",t);
+    else if(t==="timeline"||t==="quiz"){vScreen="more";realGo(t);navSel();}
+    else vGo("map",t);});
+});
+$v("moreAbout").onclick=()=>$v("aboutModal").classList.add("show");
+if($v("goAdv"))$v("goAdv").onclick=()=>vGo("map","adv");
+if($v("advBack"))$v("advBack").onclick=()=>vGo("map","map");
+/* ── ネタバレピル／シート ── */
+const sel=$v("spoiler");
+function spLabel(){const v=Number(sel.value);return v>=999?"全巻表示":"巻 "+v+" まで";}
+function buildVolGrid(){const g=$v("volGrid");g.innerHTML="";
+  const all=document.createElement("button");all.type="button";all.textContent="全巻";all.className="all"+(Number(sel.value)>=999?" on":"");all.onclick=()=>pick(999);g.appendChild(all);
+  for(let v=1;v<=MAXV;v++){const b=document.createElement("button");b.type="button";b.textContent=v;if(Number(sel.value)===v)b.classList.add("on");b.onclick=()=>pick(v);g.appendChild(b);}}
+function pick(v){sel.value=String(v);sel.dispatchEvent(new Event("change"));syncSpoil();}
+function syncSpoil(){$v("spoilLab").textContent=spLabel();buildVolGrid();if(vScreen==="home")updateHero();}
+$v("spoilPill").onclick=()=>{buildVolGrid();$v("spoilModal").classList.add("show");};
+$v("spoilDone").onclick=()=>$v("spoilModal").classList.remove("show");
+$v("spoilModal").addEventListener("click",e=>{if(e.target.id==="spoilModal")$v("spoilModal").classList.remove("show");});
+/* ── ホームのヒーロー ── */
+function updateHero(){
+  const v=Number(sel.value),cap=v>=999?MAXV:Math.min(v,MAXV);
+  $v("heroVol").innerHTML=v>=999?"全巻表示中":"巻 <b>"+v+"</b> まで表示中";
+  $v("heroProg").style.width=(cap/MAXV*100)+"%";
+  let ep="";try{const vm=DATA.volMap.filter(x=>(x.vol||0)<=cap&&x.epName);if(vm.length)ep=vm[vm.length-1].epName;}catch(_){}
+  $v("heroSub").textContent=ep?("エピソード："+ep):"";
+  try{
+    const inVol=x=>{const fv=Number(x);return !fv||fv<=cap;};
+    const chars=Object.keys(DATA.charById).filter(id=>inVol(DATA.charById[id]["初登場巻"])).length;
+    const st=[[chars,"キャラクター"],
+      [(DATA.islands||[]).filter(x=>inVol(x.vol)).length,"島マップ"],
+      [(DATA.fruits||[]).filter(x=>inVol(x.vol)).length,"悪魔の実"],
+      [(DATA.battleLog||[]).filter(x=>inVol(x.vol)).length,"バトル"]];
+    $v("heroStats").innerHTML=st.map(s=>'<div class="stat"><div class="n">'+s[0]+'</div><div class="l">'+s[1]+'</div></div>').join("");
+  }catch(_){}
+}
+/* ── チェックボックス→チップ表示 ── */
+document.querySelectorAll(".chk").forEach(l=>{const i=l.querySelector("input");if(!i)return;
+  const u=()=>l.classList.toggle("on",i.checked);i.addEventListener("change",u);u();});
+syncSpoil();
+vGo("home");
+})();
 </script>
 <script>if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){window.addEventListener('load',function(){navigator.serviceWorker.register('./service-worker.js').catch(function(){});});}</script>
 </body>
