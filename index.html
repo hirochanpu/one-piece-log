@@ -106,6 +106,19 @@ table.mt th{color:var(--muted);font-weight:700;font-size:11px}
 .modal .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:560px;width:100%;max-height:84vh;overflow:auto;padding:20px 22px}
 .modal h2{margin:0 0 6px;font-size:18px}.modal h3{font-size:12px;color:var(--accent);margin:14px 0 4px;letter-spacing:.5px}
 .modal p{font-size:13px;line-height:1.75;margin:4px 0}.modal .close{float:right;cursor:pointer;color:var(--muted);background:none;border:0;font-size:22px}
+/* モバイル: ランキングのモード切替をプルダウン化（狭い画面では#rankSegを隠し#rankSelを表示） */
+#rankSel{display:none;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-weight:700;font-size:13px}
+@media(max-width:640px){#rankSeg{display:none}#rankSel{display:inline-block}}
+/* 世界地図 全画面ボタン */
+.mapfull{position:absolute;top:8px;right:8px;z-index:6;background:rgba(6,16,28,.72);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer}
+.main.fs{position:fixed;inset:0;z-index:60;background:var(--bg);overflow:hidden}
+.main.fs #stage{width:100vw;height:100vh}
+/* 総合偏差値レーダー：PCは分割インライン、スマホ(≤640px)はポップアップ */
+#hnRadarWrap{display:none;flex:1 1 300px;min-width:270px}
+#hnRadarWrap.open{display:block}
+.hnRadarCard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 14px 14px;position:relative}
+#hnRadarClose{display:none;position:absolute;top:2px;right:9px;background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
+@media(max-width:640px){#hnRadarWrap.open{display:flex;position:fixed;inset:0;background:#0009;z-index:50;align-items:center;justify-content:center;flex:none;min-width:0}.hnRadarCard{max-width:400px;width:92%}#hnRadarClose{display:block}}
 
 /* ═══════════ v2 redesign ═══════════ */
 body{background:radial-gradient(120% 80% at 70% -10%,#12304e 0%,transparent 60%),radial-gradient(100% 70% at 10% 110%,#0e2440 0%,transparent 55%),var(--bg)}
@@ -224,6 +237,7 @@ nav.vnav button.on{color:var(--accent)}
     </span>
   </div>
   <div class="main">
+    <button class="mapfull" id="mapFull" title="全画面（横向き推奨）">⛶ 全画面</button>
     <svg id="stage" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="calban" id="calban"></div>
     <div class="legend" id="legend"></div>
@@ -232,12 +246,14 @@ nav.vnav button.on{color:var(--accent)}
     <div class="panel" id="rankPanel">
       <div class="panelhead">
         <div class="seg" id="rankSeg"><button data-rk="bt" class="on">懸賞金</button><button data-rk="bf">懸賞金(勢力)</button><button data-rk="ba">懸賞金(平均)</button><button data-rk="su">技使用回数</button><button data-rk="fi">決め技</button><button data-rk="sk">技の種類数</button><button data-rk="cv">表紙登場</button><button data-rk="ap">登場話数</button><button data-rk="dg">扉絵登場</button><button data-rk="hn">総合(偏差値)</button></div>
+        <select id="rankSel"><option value="bt">懸賞金</option><option value="bf">懸賞金(勢力)</option><option value="ba">懸賞金(平均)</option><option value="su">技使用回数</option><option value="fi">決め技</option><option value="sk">技の種類数</option><option value="cv">表紙登場</option><option value="ap">登場話数</option><option value="dg">扉絵登場</option><option value="hn">総合(偏差値)</option></select>
         <label class="chk" id="aliveOnlyWrap"><input type="checkbox" id="aliveOnly" checked>現役のみ</label>
         <label class="chk" id="coverSerialWrap" style="display:none"><input type="checkbox" id="coverSerialChk" checked>短期集中連載を含む</label>
         <label class="chk" id="rankAllWrap"><input type="checkbox" id="rankAllChk"><span id="rankAllTxt">全体表示</span></label>
         <select class="mini" id="rankCharSel"><option value="">技：全キャラ</option></select><select class="mini" id="fGender"></select><select class="mini" id="fRace"></select><select class="mini" id="fBlood"></select><span style="font-size:12px;color:var(--muted)" id="rankNote"></span>
       </div>
       <div id="hnCtl" style="display:none;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:6px 2px;border-top:1px solid var(--line);margin-top:2px">
+        <span><span style="font-size:12px;color:var(--muted)">集計</span> <select class="mini" id="hnScope"><option value="cumu">通算（〜この巻）</option><option value="vol">この巻のみ</option></select></span>
         <span><span style="font-size:12px;color:var(--muted)">母集団</span> <select class="mini" id="hnPop"><option value="imp">重要度A・B</option><option value="apr1">登場話数≥1%</option><option value="all">全員</option></select></span>
         <span><span style="font-size:12px;color:var(--muted)">歪み対策</span> <select class="mini" id="hnTf"><option value="raw">素点</option><option value="log">対数</option><option value="pct">パーセンタイル</option></select></span>
         <span id="hnWeights" style="display:inline-flex;flex-wrap:wrap;gap:4px 8px;align-items:center"></span>
@@ -245,9 +261,12 @@ nav.vnav button.on{color:var(--accent)}
       </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
         <div id="rankBody" style="flex:1 1 380px;min-width:300px"></div>
-        <div id="hnRadarWrap" style="display:none;flex:1 1 300px;min-width:270px">
-          <svg id="hnRadar" viewBox="0 0 300 300" style="width:100%;max-width:340px;display:block;margin:0 auto"></svg>
-          <div id="hnRadarKv" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6"></div>
+        <div id="hnRadarWrap">
+          <div class="hnRadarCard">
+            <button id="hnRadarClose">✕</button>
+            <svg id="hnRadar" viewBox="0 0 300 300" style="width:100%;max-width:340px;display:block;margin:0 auto"></svg>
+            <div id="hnRadarKv" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.7"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -374,7 +393,7 @@ let PNAMEBYID={};
 function placeNameAtVol(lid,cap){const L=PNAMEBYID[lid];if(!L||!L.length)return null;let best=null;for(const e of L){if(e.vol==null||e.vol<=cap){if(!best||(e.vol||0)>(best.vol||0))best=e;}}if(!best)best=L[0];return best.name;}
 function syncPlaceNames(cap){for(const lid in PNAMEBYID){const p=DATA.placeById[lid];if(p){const n=placeNameAtVol(lid,cap);if(n)p.name=n;else if(p.name0!=null)p.name=p.name0;}}}
 const S={tab:"map",basis:"volume",style:"zone",stops:[],idx:0,maxVol:999,focus:"",trail:true,flashback:false,labels:true,autozoom:true,
-  playing:false,timer:null,mapFrac:0,mapRAF:null,mapLast:0,mapZoom:1,mapPanX:0,mapPanY:0,mapPanDrag:null,proj:null,bg:null,imgW:CAL.imgW,imgH:CAL.imgH,cal:null,calStep:0,calClicks:[],rankMode:"bt",aliveOnly:true,rankAll:false,coverSerial:true,hnPop:"imp",hnTf:"raw",hnW:{apr:1,dg:1,cov:1,skk:1,sku:1,bwin:1,bounty:1},hnSel:"",fruitType:"",rankChar:"",facSel:"",facPins:[],battleChar:"",battleSort:"rate",fGender:"",fRace:"",fBlood:"",quiz:null,quizScore:0,quizTotal:0,quizAnswered:false,quizPick:null,dictCat:"char",dictSearch:"",dictG:"",dictR:"",legCollapsed:false,advIsland:"",advIdx:0,advStops:[],advChar:"",advPlaying:false,advTimer:null,advU:0,advRAF:null,advLast:0,timelineSel:[]};
+  playing:false,timer:null,mapFrac:0,mapRAF:null,mapLast:0,mapZoom:1,mapPanX:0,mapPanY:0,mapPanDrag:null,proj:null,bg:null,imgW:CAL.imgW,imgH:CAL.imgH,cal:null,calStep:0,calClicks:[],rankMode:"bt",aliveOnly:true,rankAll:false,coverSerial:true,hnPop:"imp",hnTf:"raw",hnScope:"cumu",hnW:{apr:1,dg:1,cov:1,skk:1,sku:1,bwin:1,bounty:1},hnSel:"",fruitType:"",rankChar:"",facSel:"",facPins:[],battleChar:"",battleSort:"rate",fGender:"",fRace:"",fBlood:"",quiz:null,quizScore:0,quizTotal:0,quizAnswered:false,quizPick:null,dictCat:"char",dictSearch:"",dictG:"",dictR:"",legCollapsed:false,advIsland:"",advIdx:0,advStops:[],advChar:"",advPlaying:false,advTimer:null,advU:0,advRAF:null,advLast:0,timelineSel:[]};
 const SVGNS="http://www.w3.org/2000/svg";const $=id=>document.getElementById(id);
 const num=v=>{if(v==null||v==="")return null;const n=Number(v);return isNaN(n)?null:n};
 const yen=n=>Number(n).toLocaleString();
@@ -650,14 +669,16 @@ function showCluster(lid,cids,rt){const p=DATA.placeById[lid];$("dName").textCon
 const HNM=[{k:'apr',label:'登場話数',short:'登場'},{k:'dg',label:'扉絵登場',short:'扉絵'},{k:'cov',label:'表紙回数',short:'表紙'},{k:'skk',label:'技種類数',short:'技種'},{k:'sku',label:'技使用',short:'技用'},{k:'bwin',label:'バトル勝利',short:'勝利'},{k:'bounty',label:'懸賞金',short:'賞金'}];
 let hnLastRows=null;
 function hnCapV(){return Math.min(S.maxVol,Math.ceil(curVolNow()));}
+// 集計ゲート：通算(cumu)=vol<=cap / この巻(vol)=round(vol)===cap。vol欠損はcumuのみ通す。
+function hnGate(v,cap){if(S.hnScope==="vol")return v!=null&&Math.round(v)===cap;return v==null||v<=cap;}
 function hnBuildMaps(cap){
   const apr={},dg={},cov={},skk={},sku={},bwin={},bounty={},chset=new Set();
-  for(const a of (DATA.appearLog||[])){if(!a.cid||a.ch==null)continue;if(a.vol!=null&&a.vol>cap)continue;(apr[a.cid]=apr[a.cid]||new Set()).add(a.ch);chset.add(a.ch);}
-  for(const a of (DATA.coverArtLog||[])){if(!a.cid||a.ch==null)continue;if(a.vol!=null&&a.vol>cap)continue;(dg[a.cid]=dg[a.cid]||new Set()).add(a.ch);}
-  for(const c of (DATA.coverLog||[])){if(!c.cid)continue;if(c.vol!=null&&c.vol>cap)continue;cov[c.cid]=(cov[c.cid]||0)+1;}
-  for(const s of (DATA.skillLog||[])){if(!s.uid||!s.mname)continue;if(s.vol!=null&&s.vol>cap)continue;(skk[s.uid]=skk[s.uid]||new Set()).add(s.mname);sku[s.uid]=(sku[s.uid]||0)+1;}
-  for(const b of (DATA.battleLog||[])){if(b.vol!=null&&b.vol>cap)continue;for(const w of (b.w||[])){if(w)bwin[w]=(bwin[w]||0)+1;}}
-  for(const b of (DATA.bountyLog||[])){if(!b.cid||b.amount==null)continue;if(b.vol!=null&&b.vol>cap)continue;const cur=bounty[b.cid];const bv=(b.vol==null?-1:b.vol);if(!cur||bv>=cur.vol)bounty[b.cid]={vol:bv,amt:b.amount};}
+  for(const a of (DATA.appearLog||[])){if(!a.cid||a.ch==null)continue;if(!hnGate(a.vol,cap))continue;(apr[a.cid]=apr[a.cid]||new Set()).add(a.ch);chset.add(a.ch);}
+  for(const a of (DATA.coverArtLog||[])){if(!a.cid||a.ch==null)continue;if(!hnGate(a.vol,cap))continue;(dg[a.cid]=dg[a.cid]||new Set()).add(a.ch);}
+  for(const c of (DATA.coverLog||[])){if(!c.cid)continue;if(!hnGate(c.vol,cap))continue;cov[c.cid]=(cov[c.cid]||0)+1;}
+  for(const s of (DATA.skillLog||[])){if(!s.uid||!s.mname)continue;if(!hnGate(s.vol,cap))continue;(skk[s.uid]=skk[s.uid]||new Set()).add(s.mname);sku[s.uid]=(sku[s.uid]||0)+1;}
+  for(const b of (DATA.battleLog||[])){if(!hnGate(b.vol,cap))continue;for(const w of (b.w||[])){if(w)bwin[w]=(bwin[w]||0)+1;}}
+  for(const b of (DATA.bountyLog||[])){if(!b.cid||b.amount==null)continue;if(!hnGate(b.vol,cap))continue;const cur=bounty[b.cid];const bv=(b.vol==null?-1:b.vol);if(!cur||bv>=cur.vol)bounty[b.cid]={vol:bv,amt:b.amount};}
   return {apr,dg,cov,skk,sku,bwin,bounty,totalCh:chset.size};
 }
 function hnVal(maps,cid,k){
@@ -696,8 +717,8 @@ function hnBuildWeights(){
   box.querySelectorAll("[data-hw]").forEach(inp=>inp.oninput=()=>{S.hnW[inp.dataset.hw]=Math.max(0,parseFloat(inp.value)||0);renderRank();});
 }
 function hnDrawRadar(row){
-  const wrap=$("hnRadarWrap"),svg=$("hnRadar");if(!row){wrap.style.display="none";return;}
-  wrap.style.display="";const cx=150,cy=155,R=100,N=HNM.length;
+  const svg=$("hnRadar");if(!row){svg.innerHTML="";$("hnRadarKv").innerHTML="";return;}
+  const cx=150,cy=155,R=100,N=HNM.length;
   const ang=i=>(-90+i*360/N)*Math.PI/180,rad=v=>{const cl=Math.max(20,Math.min(80,v));return (cl-20)/60*R;};
   let h='';[30,40,50,60,70].forEach(g=>{const pts=HNM.map((m,i)=>[cx+rad(g)*Math.cos(ang(i)),cy+rad(g)*Math.sin(ang(i))]);h+=`<polygon points="${pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="none" stroke="${g===50?'#3a5f80':'#24425f'}" stroke-width="${g===50?1.3:1}"${g===50?' stroke-dasharray="3 3"':''}/>`;});
   HNM.forEach((m,i)=>{h+=`<line x1="${cx}" y1="${cy}" x2="${(cx+R*Math.cos(ang(i))).toFixed(1)}" y2="${(cy+R*Math.sin(ang(i))).toFixed(1)}" stroke="#24425f" stroke-width="1"/>`;});
@@ -711,7 +732,7 @@ function hnDrawRadar(row){
 
 // ===== ランキング（スライダー基準）=====
 function renderRank(){
-  const body=$("rankBody");const capV=Math.min(S.maxVol,Math.ceil(curVolNow()));const isHn=S.rankMode==="hn";$("rankNote").textContent=(S.rankMode==="cv"||S.rankMode==="ap"||S.rankMode==="dg"||isHn)?`第${capV}巻まで（スライダー連動）`:timeLabel();$("rankCharSel").style.display=(S.rankMode==="su"||S.rankMode==="fi")?"":"none";$("coverSerialWrap").style.display=(S.rankMode==="dg")?"":"none";$("hnCtl").style.display=isHn?"flex":"none";$("hnRadarWrap").style.display=isHn?"":"none";if(isHn)hnBuildWeights();const showF=S.rankMode==="bt";["fGender","fRace","fBlood"].forEach(id=>$(id).style.display=showF?"":"none");$("aliveOnlyWrap").style.display=showF?"":"none";if(showF){const bh=Object.keys(DATA.charById).filter(id=>introducedCur(id)&&bountyCur(id)!=null).map(id=>DATA.charById[id]);const G=[...new Set(bh.map(c=>c["性別"]).filter(Boolean))].sort(),R=[...new Set(bh.map(c=>c["種族"]).filter(Boolean))].sort(),B=[...new Set(bh.map(c=>c["血液型"]).filter(Boolean))].sort();if(S.fGender&&!G.includes(S.fGender))S.fGender="";if(S.fRace&&!R.includes(S.fRace))S.fRace="";if(S.fBlood&&!B.includes(S.fBlood))S.fBlood="";fillSel("fGender",G,S.fGender,"性別：全");fillSel("fRace",R,S.fRace,"種族：全");fillSel("fBlood",B,S.fBlood,"血液型：全");}let items=[];
+  const body=$("rankBody");const capV=Math.min(S.maxVol,Math.ceil(curVolNow()));const isHn=S.rankMode==="hn";$("rankNote").textContent=isHn?(S.hnScope==="vol"?`第${capV}巻のみの活躍（偏差値）`:`第${capV}巻まで通算（偏差値）`):((S.rankMode==="cv"||S.rankMode==="ap"||S.rankMode==="dg")?`第${capV}巻まで（スライダー連動）`:timeLabel());$("rankCharSel").style.display=(S.rankMode==="su"||S.rankMode==="fi")?"":"none";$("coverSerialWrap").style.display=(S.rankMode==="dg")?"":"none";$("hnCtl").style.display=isHn?"flex":"none";if(!isHn)$("hnRadarWrap").classList.remove("open");if(isHn)hnBuildWeights();if($("rankSel").value!==S.rankMode)$("rankSel").value=S.rankMode;const showF=S.rankMode==="bt";["fGender","fRace","fBlood"].forEach(id=>$(id).style.display=showF?"":"none");$("aliveOnlyWrap").style.display=showF?"":"none";if(showF){const bh=Object.keys(DATA.charById).filter(id=>introducedCur(id)&&bountyCur(id)!=null).map(id=>DATA.charById[id]);const G=[...new Set(bh.map(c=>c["性別"]).filter(Boolean))].sort(),R=[...new Set(bh.map(c=>c["種族"]).filter(Boolean))].sort(),B=[...new Set(bh.map(c=>c["血液型"]).filter(Boolean))].sort();if(S.fGender&&!G.includes(S.fGender))S.fGender="";if(S.fRace&&!R.includes(S.fRace))S.fRace="";if(S.fBlood&&!B.includes(S.fBlood))S.fBlood="";fillSel("fGender",G,S.fGender,"性別：全");fillSel("fRace",R,S.fRace,"種族：全");fillSel("fBlood",B,S.fBlood,"血液型：全");}let items=[];
   if(S.rankMode==="bt"){
     for(const cid in DATA.charById){if(!(S.aliveOnly?aliveCur(cid):introducedCur(cid)))continue;const c=DATA.charById[cid];const amt=bountyCur(cid);if(amt==null)continue;if(S.fGender&&c["性別"]!==S.fGender)continue;if(S.fRace&&c["種族"]!==S.fRace)continue;if(S.fBlood&&c["血液型"]!==S.fBlood)continue;const fac=facCur(cid);const tnm=titleNameNow(cid);items.push({key:cid,label:c["名前"]||cid,sub:facName(fac)+(tnm?` ・${tnm}`:""),val:amt,col:facColor(fac),disp:bountyDisp(cid)});}
     items.sort((a,b)=>b.val-a.val);
@@ -754,11 +775,13 @@ function renderRank(){
   $("rankAllTxt").textContent=S.rankAll?`全${total}件`:(total>30?`全体表示（${total}件）`:"全体表示");
   const max=items.length?items[0].val:1;
   rankFlip(body,items,max);
-  if(isHn){const r=hnLastRows&&hnLastRows.find(x=>x.cid===S.hnSel);hnDrawRadar(r||null);}
+  if(isHn){const r=hnLastRows&&hnLastRows.find(x=>x.cid===S.hnSel);const desktop=!window.matchMedia("(max-width:640px)").matches;
+    if(desktop){$("hnRadarWrap").classList.add("open");hnDrawRadar(r||null);}      // PC=常に分割表示
+    else if($("hnRadarWrap").classList.contains("open"))hnDrawRadar(r||null);}     // スマホ=開いている時だけ更新
 }
 // ランキングのFLIPアニメ描画：行をkeyでDOM再利用し、順位入れ替わりをtranslateYで滑らかに移動。前回順位との差を▲▼バッジ表示。
 function rankFlip(body,items,max){
-  const sig=[S.rankMode,S.rankChar||"",S.fGender||"",S.fRace||"",S.fBlood||"",S.aliveOnly?1:0,S.rankAll?1:0,S.coverSerial?1:0,S.hnPop,S.hnTf,HNM.map(m=>S.hnW[m.k]).join(",")].join("|");
+  const sig=[S.rankMode,S.rankChar||"",S.fGender||"",S.fRace||"",S.fBlood||"",S.aliveOnly?1:0,S.rankAll?1:0,S.coverSerial?1:0,S.hnPop,S.hnTf,S.hnScope,HNM.map(m=>S.hnW[m.k]).join(",")].join("|");
   const prev=(rankFlip._sig===sig)?rankFlip._ranks:null;
   rankFlip._sig=sig;rankFlip._ranks={};items.forEach((it,i)=>rankFlip._ranks[String(it.key)]=i);
   if(!items.length){body.innerHTML='<div style="color:var(--muted);padding:20px">この時点ではデータがありません。</div>';return;}
@@ -1087,13 +1110,19 @@ function mapTick(ts){if(!S.playing)return;if(!S.mapLast)S.mapLast=ts;const dt=(t
   if(S.tab==="map"){S.mapFrac+=dt*(1000/spd);while(S.mapFrac>=1){S.mapFrac-=1;S.idx++;if(S.idx>=S.stops.length-1){S.idx=S.stops.length-1;S.mapFrac=0;render();mapPause();return;}}render();}
   else{S.mapFrac+=dt*(1000/spd);if(S.mapFrac>=1){S.mapFrac=0;S.idx=S.idx>=S.stops.length-1?0:S.idx+1;renderActive();}}
   S.mapRAF=requestAnimationFrame(mapTick);}
-$("rankSeg").addEventListener("click",e=>{const r=e.target.dataset.rk;if(!r)return;S.rankMode=r;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x.dataset.rk===r));renderRank();});
+function setRankMode(r){if(!r)return;S.rankMode=r;[...$("rankSeg").children].forEach(x=>x.classList.toggle("on",x.dataset.rk===r));$("rankSel").value=r;renderRank();}
+$("rankSeg").addEventListener("click",e=>setRankMode(e.target.dataset.rk));
+$("rankSel").onchange=e=>setRankMode(e.target.value);
 $("aliveOnly").onchange=e=>{S.aliveOnly=e.target.checked;renderRank();};
 $("rankAllChk").onchange=e=>{S.rankAll=e.target.checked;renderRank();};
 $("coverSerialChk").onchange=e=>{S.coverSerial=e.target.checked;renderRank();};
 $("hnPop").onchange=e=>{S.hnPop=e.target.value;S.hnSel="";renderRank();};
 $("hnTf").onchange=e=>{S.hnTf=e.target.value;renderRank();};
-$("rankBody").addEventListener("click",e=>{if(S.rankMode!=="hn")return;const row=e.target.closest(".barrow");if(!row||row.dataset.k==null)return;S.hnSel=row.dataset.k;const r=hnLastRows&&hnLastRows.find(x=>x.cid===S.hnSel);if(r)hnDrawRadar(r);});
+$("hnScope").onchange=e=>{S.hnScope=e.target.value;S.hnSel="";renderRank();};
+$("rankBody").addEventListener("click",e=>{if(S.rankMode!=="hn")return;const row=e.target.closest(".barrow");if(!row||row.dataset.k==null)return;S.hnSel=row.dataset.k;const r=hnLastRows&&hnLastRows.find(x=>x.cid===S.hnSel);if(r){hnDrawRadar(r);$("hnRadarWrap").classList.add("open");}});
+$("hnRadarClose").onclick=()=>{$("hnRadarWrap").classList.remove("open");};
+$("hnRadarWrap").onclick=e=>{if(e.target.id==="hnRadarWrap"&&window.matchMedia("(max-width:640px)").matches)$("hnRadarWrap").classList.remove("open");};
+$("mapFull").onclick=()=>{const m=document.querySelector(".main");const on=m.classList.toggle("fs");$("mapFull").textContent=on?"✕ 閉じる":"⛶ 全画面";setTimeout(()=>{try{render();}catch(_){}}, 60);};
 $("fruitSeg").addEventListener("click",e=>{const t=e.target.dataset.ft;if(t==null)return;S.fruitType=t;renderFruits();});
 $("rankCharSel").onchange=e=>{S.rankChar=e.target.value;renderRank();};
 $("battleCharSel").onchange=e=>{S.battleChar=e.target.value;renderBattle();};
@@ -1109,6 +1138,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{mapPause();document.
   const isMap=S.tab==="map";
   $("stage").style.display=isMap?"block":"none";$("legend").style.display=isMap?"block":"none";
   $("mapControls").style.display=SLIDER_TABS.includes(S.tab)?"flex":"none";$("mapOnly").style.display=isMap?"contents":"none";
+  $("mapFull").style.display=isMap?"":"none";if(!isMap){const mm=document.querySelector(".main");if(mm.classList.contains("fs")){mm.classList.remove("fs");$("mapFull").textContent="⛶ 全画面";}}
   if(!isMap)$("detail").classList.remove("show");
   for(const k in PANELS)$(PANELS[k]).classList.toggle("show",S.tab===k);
   $("ph").style.display="none";renderActive();});
@@ -1153,6 +1183,7 @@ function pauseAll(){try{mapPause()}catch(_){}try{advPause()}catch(_){}}
 function hideCustom(){$v("homePanel").classList.remove("show");$v("morePanel").classList.remove("show");}
 function hideReal(){
   $v("stage").style.display="none";$v("legend").style.display="none";$v("mapControls").style.display="none";
+  if($v("mapFull")){$v("mapFull").style.display="none";const _m=document.querySelector(".main");if(_m&&_m.classList.contains("fs")){_m.classList.remove("fs");$v("mapFull").textContent="⛶ 全画面";}}
   $v("detail").classList.remove("show");$v("calban").classList.remove("show");
   document.querySelectorAll(".panel").forEach(p=>{if(p.id!=="homePanel"&&p.id!=="morePanel")p.classList.remove("show");});
 }
