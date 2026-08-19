@@ -116,6 +116,7 @@ table.mt th{color:var(--muted);font-weight:700;font-size:11px}
 /* 総合偏差値レーダー：PCは分割インライン、スマホ(≤640px)はポップアップ */
 #hnRadarWrap{display:none;flex:1 1 300px;min-width:270px}
 #hnRadarWrap.open{display:block}
+@media(min-width:641px){#hnRadarWrap.open{position:sticky;top:6px;align-self:flex-start;max-height:calc(100dvh - 120px);overflow:auto}}
 .hnRadarCard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 14px 14px;position:relative}
 #hnRadarClose{display:none;position:absolute;top:2px;right:9px;background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
 @media(max-width:640px){#hnRadarWrap.open{display:flex;position:fixed;inset:0;background:#0009;z-index:50;align-items:center;justify-content:center;flex:none;min-width:0}.hnRadarCard{max-width:400px;width:92%}#hnRadarClose{display:block}}
@@ -249,6 +250,7 @@ nav.vnav button.on{color:var(--accent)}
         <select id="rankSel"><option value="bt">懸賞金</option><option value="bf">懸賞金(勢力)</option><option value="ba">懸賞金(平均)</option><option value="su">技使用回数</option><option value="fi">決め技</option><option value="sk">技の種類数</option><option value="cv">表紙登場</option><option value="ap">登場話数</option><option value="dg">扉絵登場</option><option value="hn">総合(偏差値)</option></select>
         <label class="chk" id="aliveOnlyWrap"><input type="checkbox" id="aliveOnly" checked>現役のみ</label>
         <label class="chk" id="coverSerialWrap" style="display:none"><input type="checkbox" id="coverSerialChk" checked>短期集中連載を含む</label>
+        <label class="chk" id="bfCumuWrap" style="display:none"><input type="checkbox" id="bfCumu">通算（退場した生存キャラも含む）</label>
         <label class="chk" id="rankAllWrap"><input type="checkbox" id="rankAllChk"><span id="rankAllTxt">全体表示</span></label>
         <select class="mini" id="rankCharSel"><option value="">技：全キャラ</option></select><select class="mini" id="fGender"></select><select class="mini" id="fRace"></select><select class="mini" id="fBlood"></select><span style="font-size:12px;color:var(--muted)" id="rankNote"></span>
       </div>
@@ -264,8 +266,17 @@ nav.vnav button.on{color:var(--accent)}
         <div id="hnRadarWrap">
           <div class="hnRadarCard">
             <button id="hnRadarClose">✕</button>
-            <svg id="hnRadar" viewBox="0 0 300 300" style="width:100%;max-width:340px;display:block;margin:0 auto"></svg>
-            <div id="hnRadarKv" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.7"></div>
+            <div class="seg" id="hnChartTab" style="margin-bottom:8px"><button data-hc="radar" class="on">レーダー</button><button data-hc="line">順位推移</button></div>
+            <div id="hnRadarView">
+              <svg id="hnRadar" viewBox="0 0 300 300" style="width:100%;max-width:340px;display:block;margin:0 auto"></svg>
+              <div id="hnRadarKv" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.7"></div>
+            </div>
+            <div id="hnLineView" style="display:none">
+              <div style="display:flex;gap:6px;align-items:center;margin:0 0 6px"><span style="font-size:12px;color:var(--muted)">集計</span><div class="seg" id="hnLineScopeSeg"><button data-ls="cumu" class="on">通算</button><button data-ls="vol">その巻</button></div></div>
+              <svg id="hnLine" viewBox="0 0 340 240" style="width:100%;max-width:360px;display:block;margin:0 auto;cursor:pointer"></svg>
+              <div id="hnLineKv" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6"></div>
+              <div id="hnLineDetail" style="font-size:12px;line-height:1.6;margin-top:2px"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -393,7 +404,7 @@ let PNAMEBYID={};
 function placeNameAtVol(lid,cap){const L=PNAMEBYID[lid];if(!L||!L.length)return null;let best=null;for(const e of L){if(e.vol==null||e.vol<=cap){if(!best||(e.vol||0)>(best.vol||0))best=e;}}if(!best)best=L[0];return best.name;}
 function syncPlaceNames(cap){for(const lid in PNAMEBYID){const p=DATA.placeById[lid];if(p){const n=placeNameAtVol(lid,cap);if(n)p.name=n;else if(p.name0!=null)p.name=p.name0;}}}
 const S={tab:"map",basis:"volume",style:"zone",stops:[],idx:0,maxVol:999,focus:"",trail:true,flashback:false,labels:true,autozoom:true,
-  playing:false,timer:null,mapFrac:0,mapRAF:null,mapLast:0,mapZoom:1,mapPanX:0,mapPanY:0,mapPanDrag:null,proj:null,bg:null,imgW:CAL.imgW,imgH:CAL.imgH,cal:null,calStep:0,calClicks:[],rankMode:"bt",aliveOnly:true,rankAll:false,coverSerial:true,hnPop:"imp",hnTf:"raw",hnScope:"cumu",hnW:{apr:1,dg:1,cov:1,skk:1,sku:1,bwin:1,bounty:1},hnSel:"",fruitType:"",rankChar:"",facSel:"",facPins:[],battleChar:"",battleSort:"rate",fGender:"",fRace:"",fBlood:"",quiz:null,quizScore:0,quizTotal:0,quizAnswered:false,quizPick:null,dictCat:"char",dictSearch:"",dictG:"",dictR:"",legCollapsed:false,advIsland:"",advIdx:0,advStops:[],advChar:"",advPlaying:false,advTimer:null,advU:0,advRAF:null,advLast:0,timelineSel:[]};
+  playing:false,timer:null,mapFrac:0,mapRAF:null,mapLast:0,mapZoom:1,mapPanX:0,mapPanY:0,mapPanDrag:null,proj:null,bg:null,imgW:CAL.imgW,imgH:CAL.imgH,cal:null,calStep:0,calClicks:[],rankMode:"bt",aliveOnly:true,rankAll:false,coverSerial:true,bfCumu:false,hnPop:"imp",hnTf:"raw",hnScope:"cumu",hnChartTab:"radar",hnLineScope:"cumu",hnW:{apr:1,dg:1,cov:1,skk:1,sku:1,bwin:1,bounty:1},hnSel:"",fruitType:"",rankChar:"",facSel:"",facPins:[],battleChar:"",battleSort:"rate",fGender:"",fRace:"",fBlood:"",quiz:null,quizScore:0,quizTotal:0,quizAnswered:false,quizPick:null,dictCat:"char",dictSearch:"",dictG:"",dictR:"",legCollapsed:false,advIsland:"",advIdx:0,advStops:[],advChar:"",advPlaying:false,advTimer:null,advU:0,advRAF:null,advLast:0,timelineSel:[]};
 const SVGNS="http://www.w3.org/2000/svg";const $=id=>document.getElementById(id);
 const num=v=>{if(v==null||v==="")return null;const n=Number(v);return isNaN(n)?null:n};
 const yen=n=>Number(n).toLocaleString();
@@ -445,6 +456,11 @@ function facCur(cid){const a=affNow(cid);if(a&&a.fac)return a.fac;if(affCids.has
 function aliveCur(cid){const c=DATA.charById[cid];if(!c)return false;const cut=currentTime();const t=curT();
   if(curVol()){const fv=num(c["初登場巻"]);if(fv!=null&&cut<fv)return false;}else{const app=num(c["登場日"]);if(app!=null&&cut<app)return false;}
   const lv=num(c["退場日"]);if(lv!=null&&lv<t)return false;
+  if(t>=0&&String(c["生存ステータス"]).trim()==="1")return false;
+  return true;}
+// 通算集計用：aliveCurから「退場日」除外だけを外す（＝退場したキャラも生存していれば含む）。故人(生存ステータス=1)は引き続き除外。
+function aliveInclLeft(cid){const c=DATA.charById[cid];if(!c)return false;const cut=currentTime();const t=curT();
+  if(curVol()){const fv=num(c["初登場巻"]);if(fv!=null&&cut<fv)return false;}else{const app=num(c["登場日"]);if(app!=null&&cut<app)return false;}
   if(t>=0&&String(c["生存ステータス"]).trim()==="1")return false;
   return true;}
 function introducedCur(cid){const c=DATA.charById[cid];if(!c)return false;const cut=currentTime();if(curVol()){const fv=num(c["初登場巻"]);return fv==null||fv<=cut;}const app=num(c["登場日"]);return app==null||cut>=app;}
@@ -668,17 +684,18 @@ function showCluster(lid,cids,rt){const p=DATA.placeById[lid];$("dName").textCon
 // ===== 総合(偏差値)ランキング =====
 const HNM=[{k:'apr',label:'登場話数',short:'登場'},{k:'dg',label:'扉絵登場',short:'扉絵'},{k:'cov',label:'表紙回数',short:'表紙'},{k:'skk',label:'技種類数',short:'技種'},{k:'sku',label:'技使用',short:'技用'},{k:'bwin',label:'バトル勝利',short:'勝利'},{k:'bounty',label:'懸賞金',short:'賞金'}];
 let hnLastRows=null;
+let hnLineState=null;   // 順位推移グラフのクリック判定用（{cid,scope,pts,ml,iw,vMin,vMax,W}）
 function hnCapV(){return Math.min(S.maxVol,Math.ceil(curVolNow()));}
 // 集計ゲート：通算(cumu)=vol<=cap / この巻(vol)=round(vol)===cap。vol欠損はcumuのみ通す。
-function hnGate(v,cap){if(S.hnScope==="vol")return v!=null&&Math.round(v)===cap;return v==null||v<=cap;}
-function hnBuildMaps(cap){
+function hnGate(v,cap,scope){scope=scope||S.hnScope;if(scope==="vol")return v!=null&&Math.round(v)===cap;return v==null||v<=cap;}
+function hnBuildMaps(cap,scope){
   const apr={},dg={},cov={},skk={},sku={},bwin={},bounty={},chset=new Set();
-  for(const a of (DATA.appearLog||[])){if(!a.cid||a.ch==null)continue;if(!hnGate(a.vol,cap))continue;(apr[a.cid]=apr[a.cid]||new Set()).add(a.ch);chset.add(a.ch);}
-  for(const a of (DATA.coverArtLog||[])){if(!a.cid||a.ch==null)continue;if(!hnGate(a.vol,cap))continue;(dg[a.cid]=dg[a.cid]||new Set()).add(a.ch);}
-  for(const c of (DATA.coverLog||[])){if(!c.cid)continue;if(!hnGate(c.vol,cap))continue;cov[c.cid]=(cov[c.cid]||0)+1;}
-  for(const s of (DATA.skillLog||[])){if(!s.uid||!s.mname)continue;if(!hnGate(s.vol,cap))continue;(skk[s.uid]=skk[s.uid]||new Set()).add(s.mname);sku[s.uid]=(sku[s.uid]||0)+1;}
-  for(const b of (DATA.battleLog||[])){if(!hnGate(b.vol,cap))continue;if(b.res&&b.res!=="決着")continue;for(const w of (b.w||[])){if(w)bwin[w]=(bwin[w]||0)+1;}}   // バトル勝利は決着のみ(バトルタブと整合)
-  for(const b of (DATA.bountyLog||[])){if(!b.cid||b.amount==null)continue;if(!hnGate(b.vol,cap))continue;const cur=bounty[b.cid];const bv=(b.vol==null?-1:b.vol);if(!cur||bv>=cur.vol)bounty[b.cid]={vol:bv,amt:b.amount};}
+  for(const a of (DATA.appearLog||[])){if(!a.cid||a.ch==null)continue;if(!hnGate(a.vol,cap,scope))continue;(apr[a.cid]=apr[a.cid]||new Set()).add(a.ch);chset.add(a.ch);}
+  for(const a of (DATA.coverArtLog||[])){if(!a.cid||a.ch==null)continue;if(!hnGate(a.vol,cap,scope))continue;(dg[a.cid]=dg[a.cid]||new Set()).add(a.ch);}
+  for(const c of (DATA.coverLog||[])){if(!c.cid)continue;if(!hnGate(c.vol,cap,scope))continue;cov[c.cid]=(cov[c.cid]||0)+1;}
+  for(const s of (DATA.skillLog||[])){if(!s.uid||!s.mname)continue;if(!hnGate(s.vol,cap,scope))continue;(skk[s.uid]=skk[s.uid]||new Set()).add(s.mname);sku[s.uid]=(sku[s.uid]||0)+1;}
+  for(const b of (DATA.battleLog||[])){if(!hnGate(b.vol,cap,scope))continue;if(b.res&&b.res!=="決着")continue;for(const w of (b.w||[])){if(w)bwin[w]=(bwin[w]||0)+1;}}   // バトル勝利は決着のみ(バトルタブと整合)
+  for(const b of (DATA.bountyLog||[])){if(!b.cid||b.amount==null)continue;if(!hnGate(b.vol,cap,scope))continue;const cur=bounty[b.cid];const bv=(b.vol==null?-1:b.vol);if(!cur||bv>=cur.vol)bounty[b.cid]={vol:bv,amt:b.amount};}
   return {apr,dg,cov,skk,sku,bwin,bounty,totalCh:chset.size};
 }
 function hnVal(maps,cid,k){
@@ -697,8 +714,9 @@ function hnPopulation(maps){
   if(S.hnPop==='apr1'){const th=maps.totalCh*0.01;return all.filter(id=>hnVal(maps,id,'apr')>=th);}
   return all.filter(id=>HNM.some(m=>hnVal(maps,id,m.k)>0));
 }
-function hnCompute(){
-  const cap=hnCapV();const maps=hnBuildMaps(cap);const pop=hnPopulation(maps);const tf=S.hnTf;
+function hnCompute(){return hnComputeAt(hnCapV(),S.hnScope);}
+function hnComputeAt(cap,scope){
+  const maps=hnBuildMaps(cap,scope);const pop=hnPopulation(maps).filter(id=>{const fv=num((DATA.charById[id]||{})["初登場巻"]);return fv==null||fv<=cap;});const tf=S.hnTf;   // その巻までに初登場済みのみ（登場前は母集団に入れない＝グラフ/順位に出さない・ネタバレ防止）
   const Tby={},sd={};
   HNM.forEach(m=>{
     let vals=pop.map(id=>hnVal(maps,id,m.k));
@@ -709,7 +727,7 @@ function hnCompute(){
   });
   const used=HNM.filter(m=>(S.hnW[m.k]||0)>0&&sd[m.k]>0);const wsum=used.reduce((a,m)=>a+S.hnW[m.k],0)||1;
   const rows=pop.map(id=>{const comp=used.reduce((a,m)=>a+S.hnW[m.k]*Tby[m.k][id],0)/wsum;const per={};HNM.forEach(m=>per[m.k]=Tby[m.k]?Tby[m.k][id]:50);return {cid:id,comp,per};}).sort((a,b)=>b.comp-a.comp);
-  return {rows,used};
+  return {rows,used,maps};
 }
 function hnBuildWeights(){
   const box=$("hnWeights");if(box.dataset.built)return;box.dataset.built="1";
@@ -730,14 +748,70 @@ function hnDrawRadar(row){
   $("hnRadarKv").innerHTML=`<b style="color:var(--ink);font-size:13px">${(c&&c["名前"])||row.cid}</b>　総合 <b style="color:var(--accent2)">${row.comp.toFixed(1)}</b><br>`+HNM.map(m=>`${m.label} <b style="color:var(--accent2)">${row.per[m.k].toFixed(1)}</b>`).join('　');
 }
 
+// 選択キャラの巻ごとの総合偏差値順位を算出（scope=cumu通算/vol その巻）。読了巻(hnCapV)まで。その巻モードは活動があった巻のみ点を打つ。
+function hnRankHistory(cid,scope){
+  const cap=hnCapV();const pts=[];
+  for(let v=1;v<=cap;v++){
+    const {rows,maps}=hnComputeAt(v,scope);
+    const idx=rows.findIndex(r=>r.cid===cid);
+    if(idx<0)continue;
+    if(scope==="vol"&&!HNM.some(m=>hnVal(maps,cid,m.k)>0))continue;
+    pts.push({vol:v,rank:idx+1,total:rows.length,comp:rows[idx].comp});
+  }
+  return pts;
+}
+// 順位推移の折れ線（縦=順位・1位が上、横=巻数）
+function hnDrawLine(cid){
+  const svg=$("hnLine"),kv=$("hnLineKv");
+  if(!cid){svg.innerHTML="";kv.innerHTML="";return;}
+  const scope=S.hnLineScope,c=DATA.charById[cid],nm=(c&&c["名前"])||cid,pts=hnRankHistory(cid,scope);
+  $("hnLineDetail").innerHTML="";hnLineState=null;
+  if(!pts.length){svg.innerHTML="";kv.innerHTML=`<b style="color:var(--ink)">${nm}</b>：この範囲で${scope==="vol"?"「その巻のみ」の":""}順位データがありません。`;return;}
+  const W=340,H=240,ml=36,mr=12,mt=14,mb=26,iw=W-ml-mr,ih=H-mt-mb;
+  const cap=hnCapV(),vMin=pts[0].vol,vMax=Math.max(cap,vMin),maxRank=Math.max(...pts.map(p=>p.rank),1);
+  const X=v=>ml+(vMax===vMin?iw/2:(v-vMin)/(vMax-vMin)*iw);
+  const Y=r=>mt+(maxRank<=1?0:(r-1)/(maxRank-1)*ih);
+  let h='';
+  const yt=[...new Set([1,Math.ceil(maxRank/2),maxRank])].filter(r=>r>=1);
+  yt.forEach(r=>{const y=Y(r);h+=`<line x1="${ml}" y1="${y.toFixed(1)}" x2="${(ml+iw).toFixed(1)}" y2="${y.toFixed(1)}" stroke="#24425f" stroke-width="1"${r===1?'':' stroke-dasharray="3 3"'}/><text x="${(ml-5)}" y="${(y+3).toFixed(1)}" fill="#9fb6c9" font-size="10" text-anchor="end">${r}位</text>`;});
+  const xt=[...new Set([vMin,Math.round((vMin+vMax)/2),vMax])];
+  xt.forEach(v=>{const x=X(v);h+=`<text x="${x.toFixed(1)}" y="${(H-8).toFixed(1)}" fill="#9fb6c9" font-size="10" text-anchor="middle">${v}巻</text>`;});
+  h+=`<path d="${pts.map((p,i)=>`${i?'L':'M'}${X(p.vol).toFixed(1)},${Y(p.rank).toFixed(1)}`).join(' ')}" fill="none" stroke="#37c0ff" stroke-width="2"/>`;
+  pts.forEach(p=>h+=`<circle cx="${X(p.vol).toFixed(1)}" cy="${Y(p.rank).toFixed(1)}" r="2.6" fill="#7fe0a8"><title>第${p.vol}巻 ${p.rank}位/${p.total}人 (偏差値${p.comp.toFixed(1)})</title></circle>`);
+  svg.innerHTML=h;
+  hnLineState={cid,scope,pts,ml,iw,vMin,vMax,W};
+  const last=pts[pts.length-1],best=pts.reduce((a,b)=>b.rank<a.rank?b:a,pts[0]);
+  kv.innerHTML=`<b style="color:var(--ink);font-size:13px">${nm}</b>　${scope==="vol"?"その巻のみ":"通算"}の総合偏差値順位<br>最新 第${last.vol}巻=<b style="color:var(--accent2)">${last.rank}位</b>/${last.total}人　最高 <b style="color:var(--accent2)">${best.rank}位</b>(第${best.vol}巻)<br><span style="opacity:.7">点をクリックでその巻の順位詳細</span>`;
+}
+// 折れ線の点(巻)をクリック→その巻の順位詳細（本人の順位・偏差値・7指標・前後のキャラ）
+function hnLineShowDetail(cid,scope,vol){
+  const box=$("hnLineDetail");const {rows}=hnComputeAt(vol,scope);const idx=rows.findIndex(r=>r.cid===cid);
+  if(idx<0){box.innerHTML="";return;}
+  const me=rows[idx],c=DATA.charById[cid],nm=(c&&c["名前"])||cid;
+  const lo=Math.max(0,idx-2),hi=Math.min(rows.length,idx+3);let list='';
+  for(let i=lo;i<hi;i++){const rr=rows[i],rc=DATA.charById[rr.cid],rn=(rc&&rc["名前"])||rr.cid;list+=`<div style="${rr.cid===cid?'color:var(--accent2);font-weight:700':'color:var(--muted)'}">${i+1}位 ${rn} <span style="opacity:.75">${rr.comp.toFixed(1)}</span></div>`;}
+  const per=HNM.map(m=>`${m.short}<b style="color:var(--accent2)">${me.per[m.k].toFixed(0)}</b>`).join('　');
+  box.innerHTML=`<div style="border-top:1px solid var(--line);margin-top:8px;padding-top:6px"><b style="color:var(--ink)">第${vol}巻の順位詳細</b>（${scope==='vol'?'その巻のみ':'通算'}）<br><b>${nm}</b> ${idx+1}位/${rows.length}人・偏差値<b style="color:var(--accent2)">${me.comp.toFixed(1)}</b><div style="margin:4px 0;font-size:11px">${per}</div>${list}</div>`;
+}
+// レーダー／順位推移をタブ状態(S.hnChartTab)に応じて描画
+function hnDrawChart(row){
+  const isLine=S.hnChartTab==="line";
+  $("hnRadarView").style.display=isLine?"none":"";
+  $("hnLineView").style.display=isLine?"":"none";
+  document.querySelectorAll("#hnChartTab button").forEach(b=>b.classList.toggle("on",b.dataset.hc===S.hnChartTab));
+  document.querySelectorAll("#hnLineScopeSeg button").forEach(b=>b.classList.toggle("on",b.dataset.ls===S.hnLineScope));
+  if(isLine)hnDrawLine(row?row.cid:(S.hnSel||null));
+  else hnDrawRadar(row);
+}
+
 // ===== ランキング（スライダー基準）=====
 function renderRank(){
-  const body=$("rankBody");const capV=Math.min(S.maxVol,Math.ceil(curVolNow()));const isHn=S.rankMode==="hn";$("rankNote").textContent=isHn?(S.hnScope==="vol"?`第${capV}巻のみの活躍（偏差値）`:`第${capV}巻まで通算（偏差値）`):((S.rankMode==="cv"||S.rankMode==="ap"||S.rankMode==="dg")?`第${capV}巻まで（スライダー連動）`:timeLabel());$("rankCharSel").style.display=(S.rankMode==="su"||S.rankMode==="fi")?"":"none";$("coverSerialWrap").style.display=(S.rankMode==="dg")?"":"none";$("hnCtl").style.display=isHn?"flex":"none";if(!isHn)$("hnRadarWrap").classList.remove("open");if(isHn)hnBuildWeights();if($("rankSel").value!==S.rankMode)$("rankSel").value=S.rankMode;const showF=S.rankMode==="bt";["fGender","fRace","fBlood"].forEach(id=>$(id).style.display=showF?"":"none");$("aliveOnlyWrap").style.display=showF?"":"none";if(showF){const bh=Object.keys(DATA.charById).filter(id=>introducedCur(id)&&bountyCur(id)!=null).map(id=>DATA.charById[id]);const G=[...new Set(bh.map(c=>c["性別"]).filter(Boolean))].sort(),R=[...new Set(bh.map(c=>c["種族"]).filter(Boolean))].sort(),B=[...new Set(bh.map(c=>c["血液型"]).filter(Boolean))].sort();if(S.fGender&&!G.includes(S.fGender))S.fGender="";if(S.fRace&&!R.includes(S.fRace))S.fRace="";if(S.fBlood&&!B.includes(S.fBlood))S.fBlood="";fillSel("fGender",G,S.fGender,"性別：全");fillSel("fRace",R,S.fRace,"種族：全");fillSel("fBlood",B,S.fBlood,"血液型：全");}let items=[];
+  const body=$("rankBody");const capV=Math.min(S.maxVol,Math.ceil(curVolNow()));const isHn=S.rankMode==="hn";$("rankNote").textContent=isHn?(S.hnScope==="vol"?`第${capV}巻のみの活躍（偏差値）`:`第${capV}巻まで通算（偏差値）`):((S.rankMode==="cv"||S.rankMode==="ap"||S.rankMode==="dg")?`第${capV}巻まで（スライダー連動）`:timeLabel());$("rankCharSel").style.display=(S.rankMode==="su"||S.rankMode==="fi")?"":"none";$("coverSerialWrap").style.display=(S.rankMode==="dg")?"":"none";const isBf=(S.rankMode==="bf"||S.rankMode==="ba");$("bfCumuWrap").style.display=isBf?"":"none";if(isBf)$("rankNote").textContent+=S.bfCumu?"・通算（退場した生存キャラ含む）":"・現役のみ";$("hnCtl").style.display=isHn?"flex":"none";if(!isHn)$("hnRadarWrap").classList.remove("open");if(isHn)hnBuildWeights();if($("rankSel").value!==S.rankMode)$("rankSel").value=S.rankMode;const showF=S.rankMode==="bt";["fGender","fRace","fBlood"].forEach(id=>$(id).style.display=showF?"":"none");$("aliveOnlyWrap").style.display=showF?"":"none";if(showF){const bh=Object.keys(DATA.charById).filter(id=>introducedCur(id)&&bountyCur(id)!=null).map(id=>DATA.charById[id]);const G=[...new Set(bh.map(c=>c["性別"]).filter(Boolean))].sort(),R=[...new Set(bh.map(c=>c["種族"]).filter(Boolean))].sort(),B=[...new Set(bh.map(c=>c["血液型"]).filter(Boolean))].sort();if(S.fGender&&!G.includes(S.fGender))S.fGender="";if(S.fRace&&!R.includes(S.fRace))S.fRace="";if(S.fBlood&&!B.includes(S.fBlood))S.fBlood="";fillSel("fGender",G,S.fGender,"性別：全");fillSel("fRace",R,S.fRace,"種族：全");fillSel("fBlood",B,S.fBlood,"血液型：全");}let items=[];
   if(S.rankMode==="bt"){
     for(const cid in DATA.charById){if(!(S.aliveOnly?aliveCur(cid):introducedCur(cid)))continue;const c=DATA.charById[cid];const amt=bountyCur(cid);if(amt==null)continue;if(S.fGender&&c["性別"]!==S.fGender)continue;if(S.fRace&&c["種族"]!==S.fRace)continue;if(S.fBlood&&c["血液型"]!==S.fBlood)continue;const fac=facCur(cid);const tnm=titleNameNow(cid);items.push({key:cid,label:c["名前"]||cid,sub:facName(fac)+(tnm?` ・${tnm}`:""),val:amt,col:facColor(fac),disp:bountyDisp(cid)});}
     items.sort((a,b)=>b.val-a.val);
   }else if(S.rankMode==="bf"||S.rankMode==="ba"){
-    const avg=S.rankMode==="ba";const m={};for(const cid in DATA.charById){if(!aliveCur(cid))continue;const amt=bountyCur(cid);if(amt==null)continue;const fac=facCur(cid)||"-";if(fac!=="-"&&!facExists(fac))continue;(m[fac]=m[fac]||{sum:0,n:0});m[fac].sum+=amt;m[fac].n++;}
+    const avg=S.rankMode==="ba";const gate=S.bfCumu?aliveInclLeft:aliveCur;const m={};for(const cid in DATA.charById){if(!gate(cid))continue;const amt=bountyCur(cid);if(amt==null)continue;const fac=facCur(cid)||"-";if(fac!=="-"&&!facExists(fac))continue;(m[fac]=m[fac]||{sum:0,n:0});m[fac].sum+=amt;m[fac].n++;}
     items=Object.entries(m).map(([fac,v])=>({key:fac,label:facName(fac),sub:avg?`${v.n}人 平均`:`${v.n}人`,val:avg?v.sum/v.n:v.sum,col:facColor(fac),disp:avg?yen(Math.round(v.sum/v.n)):yen(v.sum)}));items.sort((a,b)=>b.val-a.val);
   }else if(S.rankMode==="cv"){
     const cap=Math.min(S.maxVol,Math.ceil(curVolNow()));const m={};   // 表紙登場はスライダーの現在巻まで(ネタバレ巻数が上限)。再生で推移アニメ
@@ -776,12 +850,12 @@ function renderRank(){
   const max=items.length?items[0].val:1;
   rankFlip(body,items,max);
   if(isHn){const r=hnLastRows&&hnLastRows.find(x=>x.cid===S.hnSel);const desktop=!window.matchMedia("(max-width:640px)").matches;
-    if(desktop){$("hnRadarWrap").classList.add("open");hnDrawRadar(r||null);}      // PC=常に分割表示
-    else if($("hnRadarWrap").classList.contains("open"))hnDrawRadar(r||null);}     // スマホ=開いている時だけ更新
+    if(desktop){$("hnRadarWrap").classList.add("open");hnDrawChart(r||null);}      // PC=常に分割表示
+    else if($("hnRadarWrap").classList.contains("open"))hnDrawChart(r||null);}     // スマホ=開いている時だけ更新
 }
 // ランキングのFLIPアニメ描画：行をkeyでDOM再利用し、順位入れ替わりをtranslateYで滑らかに移動。前回順位との差を▲▼バッジ表示。
 function rankFlip(body,items,max){
-  const sig=[S.rankMode,S.rankChar||"",S.fGender||"",S.fRace||"",S.fBlood||"",S.aliveOnly?1:0,S.rankAll?1:0,S.coverSerial?1:0,S.hnPop,S.hnTf,S.hnScope,HNM.map(m=>S.hnW[m.k]).join(",")].join("|");
+  const sig=[S.rankMode,S.rankChar||"",S.fGender||"",S.fRace||"",S.fBlood||"",S.aliveOnly?1:0,S.rankAll?1:0,S.coverSerial?1:0,S.bfCumu?1:0,S.hnPop,S.hnTf,S.hnScope,HNM.map(m=>S.hnW[m.k]).join(",")].join("|");
   const prev=(rankFlip._sig===sig)?rankFlip._ranks:null;
   rankFlip._sig=sig;rankFlip._ranks={};items.forEach((it,i)=>rankFlip._ranks[String(it.key)]=i);
   if(!items.length){body.innerHTML='<div style="color:var(--muted);padding:20px">この時点ではデータがありません。</div>';return;}
@@ -1116,10 +1190,14 @@ $("rankSel").onchange=e=>setRankMode(e.target.value);
 $("aliveOnly").onchange=e=>{S.aliveOnly=e.target.checked;renderRank();};
 $("rankAllChk").onchange=e=>{S.rankAll=e.target.checked;renderRank();};
 $("coverSerialChk").onchange=e=>{S.coverSerial=e.target.checked;renderRank();};
+$("bfCumu").onchange=e=>{S.bfCumu=e.target.checked;renderRank();};
 $("hnPop").onchange=e=>{S.hnPop=e.target.value;S.hnSel="";renderRank();};
 $("hnTf").onchange=e=>{S.hnTf=e.target.value;renderRank();};
 $("hnScope").onchange=e=>{S.hnScope=e.target.value;S.hnSel="";renderRank();};
-$("rankBody").addEventListener("click",e=>{if(S.rankMode!=="hn")return;const row=e.target.closest(".barrow");if(!row||row.dataset.k==null)return;S.hnSel=row.dataset.k;const r=hnLastRows&&hnLastRows.find(x=>x.cid===S.hnSel);if(r){hnDrawRadar(r);$("hnRadarWrap").classList.add("open");}});
+$("rankBody").addEventListener("click",e=>{if(S.rankMode!=="hn")return;const row=e.target.closest(".barrow");if(!row||row.dataset.k==null)return;S.hnSel=row.dataset.k;const r=hnLastRows&&hnLastRows.find(x=>x.cid===S.hnSel);if(r){hnDrawChart(r);$("hnRadarWrap").classList.add("open");}});
+document.querySelectorAll("#hnChartTab button").forEach(b=>b.onclick=()=>{S.hnChartTab=b.dataset.hc;const r=hnLastRows&&hnLastRows.find(x=>x.cid===S.hnSel);hnDrawChart(r||null);});
+document.querySelectorAll("#hnLineScopeSeg button").forEach(b=>b.onclick=()=>{S.hnLineScope=b.dataset.ls;const r=hnLastRows&&hnLastRows.find(x=>x.cid===S.hnSel);hnDrawChart(r||null);});
+$("hnLine").addEventListener("click",e=>{if(!hnLineState||!hnLineState.pts.length)return;const svg=$("hnLine"),r=svg.getBoundingClientRect();const vbx=(e.clientX-r.left)/r.width*hnLineState.W;const {ml,iw,vMin,vMax,pts,cid,scope}=hnLineState;const v=vMin+(vMax===vMin?0:(vbx-ml)/iw*(vMax-vMin));let best=pts[0];for(const p of pts){if(Math.abs(p.vol-v)<Math.abs(best.vol-v))best=p;}hnLineShowDetail(cid,scope,best.vol);});
 $("hnRadarClose").onclick=()=>{$("hnRadarWrap").classList.remove("open");};
 $("hnRadarWrap").onclick=e=>{if(e.target.id==="hnRadarWrap"&&window.matchMedia("(max-width:640px)").matches)$("hnRadarWrap").classList.remove("open");};
 $("mapFull").onclick=()=>{const m=document.querySelector(".main");const on=m.classList.toggle("fs");$("mapFull").textContent=on?"✕ 閉じる":"⛶ 全画面";setTimeout(()=>{try{render();}catch(_){}}, 60);};
