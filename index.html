@@ -54,6 +54,9 @@ select.mini{background:var(--panel2);color:var(--ink);border:1px solid var(--lin
 .calban.show{display:block}
 .panel{position:absolute;inset:0;overflow:auto;padding:14px 16px;display:none}.panel.show{display:block}
 .panelhead{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+/* ランキング: モード切替タブ＋フィルタ行をスクロール時に上部固定 */
+#rankPanel{padding-top:0}
+#rankPanel .panelhead{position:sticky;top:0;z-index:6;background:var(--panel);margin:0 -16px 12px;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
 .tlchip{font-size:12px;padding:4px 9px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);cursor:pointer;white-space:nowrap}
 .tlchip.on{background:var(--accent2);color:#04263a;border-color:var(--accent2);font-weight:700}
 .tlgrid{border-collapse:collapse;font-size:12px;min-width:100%}
@@ -420,8 +423,9 @@ function facExists(fid){const f=DATA.facById[fid];if(!f)return true;
   if(curVol()&&(f.f0v!=null||f.f1v!=null)){const cv=Math.ceil(currentTime());if(f.f0v!=null&&cv<f.f0v)return false;if(f.f1v!=null&&cv>f.f1v)return false;return true;}
   const t=curT();if(f.f0t!=null&&t<f.f0t)return false;if(f.f1t!=null&&t>f.f1t)return false;return true;}
 function tForVol(v){let tv=null;for(const r of DATA.volMap){if(r.vol==null||r.vol>v||r.t==null)continue;if(tv==null||r.t>tv)tv=r.t;}
-  // 未来の外れ値(表紙連載/おまけ等＝巻数の割に通算日が先行するイベント)がその巻の代表時刻を跳ね上げないよう、次巻(v+1)までのvolMap最大通算日を上限にイベントtをクランプ
-  let ceil=null;for(const r of DATA.volMap){if(r.vol==null||r.vol>v+1||r.t==null)continue;if(ceil==null||r.t>ceil)ceil=r.t;}
+  // 未来の外れ値(表紙連載/おまけ等＝巻数の割に通算日が先行するイベント)がその巻の代表時刻を跳ね上げないよう、次巻(v+1)までのvolMap最大通算日を上限にイベントtをクランプ。
+  // ただし次巻(v+1)がまだ無い最新巻ではクランプしない（次巻の開始日が無いとceilが自巻の開始日になり、その巻の後半イベント=例)巻52の54.6が全部切り捨てられるため）
+  let ceil=null;const hasNext=DATA.volMap.some(r=>r.vol===v+1);if(hasNext)for(const r of DATA.volMap){if(r.vol==null||r.vol>v+1||r.t==null)continue;if(ceil==null||r.t>ceil)ceil=r.t;}
   let mx=0;for(const e of DATA.events){if(e.vol<=v&&e.t>=0&&e.t>mx&&(ceil==null||e.t<=ceil))mx=e.t;}return Math.max(tv==null?-1e9:tv,mx);}
 function isTitleFac(fid){const f=DATA.facById[fid];return !!(f&&f.title);}
 function isGovFac(fid){const f=DATA.facById[fid];return !!(f&&f.kind==="世界政府");}          // 海軍等の政府側=本所属でも懸賞金を凍結表示
